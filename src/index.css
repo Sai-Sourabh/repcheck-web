@@ -1,0 +1,71 @@
+@import "tailwindcss";
+@import "@fontsource/barlow/400.css";
+@import "@fontsource/barlow/500.css";
+@import "@fontsource/barlow/600.css";
+@import "@fontsource/barlow-condensed/600.css";
+@import "@fontsource/barlow-condensed/700.css";
+
+/* Palette comes from the gym floor: chalk, iron, and the cobalt of a 20 kg plate.
+   Green / red / amber are reserved for the up / down / same arrows. */
+@theme {
+  --color-chalk: #e9ecef;
+  --color-panel: #ffffff;
+  --color-ink: #12161c;
+  --color-mute: #5b6470;
+  --color-line: #d5dae0;
+  --color-plate: #2447e6;
+  --color-plate-dark: #1a36b8;
+  --color-plate-soft: #e3e8fd;
+  --color-up: #0b8f4f;
+  --color-up-soft: #ddf3e7;
+  --color-down: #d93025;
+  --color-down-soft: #fbe3e0;
+  --color-same: #a16a09;
+  --color-same-soft: #fbefd2;
+  --font-sans: "Barlow", system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Barlow", system-ui, sans-serif;
+}
+
+html {
+  background: var(--color-chalk);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  min-height: 100dvh;
+}
+h1, h2, h3, .num {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.005em;
+}
+:focus-visible {
+  outline: 2px solid var(--color-plate);
+  outline-offset: 2px;
+}
+input, select, textarea, button {
+  font: inherit;
+}
+/* 16px inputs stop iOS zooming the page when a field is focused. */
+input, select, textarea {
+  font-size: 16px;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.recharts-wrapper *:focus {
+  outline: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
