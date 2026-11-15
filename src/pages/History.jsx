@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api'
-import { kg, num, shortDate } from '../format'
+import { kg, setText, shortDate } from '../format'
 import { Async, Button, Delta, Empty, Loading, Notice, Panel } from '../components/ui'
 
 const PAGE = 15
@@ -22,8 +22,12 @@ function Detail({ id }) {
                 <li key={e.exerciseId} className="flex items-start justify-between gap-3">
                   <span className="min-w-0">
                     <span className="block font-semibold">{e.exerciseName}{e.pr && <span className="ml-2 rounded bg-plate px-1.5 py-0.5 text-[11px] font-bold text-white">PR</span>}</span>
-                    <span className="block text-sm text-mute">{e.sets.map((s) => `${num(s.weightKg)} × ${s.reps}`).join(', ')}</span>
-                    {e.bestOneRm > 0 && <span className="block text-sm text-mute">Est. 1RM {kg(e.bestOneRm)}</span>}
+                    <span className="block text-sm text-mute">{e.sets.map(setText).join(', ')}</span>
+                    {e.bestOneRm > 0 && (
+                      <span className="block text-sm text-mute">
+                        Est. 1RM {kg(e.bestOneRm)}{e.formPct != null && e.formPct < 100 ? `, form held for ${Math.round(e.formPct)}% of reps` : ''}
+                      </span>
+                    )}
                   </span>
                   <Delta direction={e.deltaDirection} pct={e.deltaPct} />
                 </li>

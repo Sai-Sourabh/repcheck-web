@@ -2,14 +2,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api'
-import { delta, estimateOneRm, today } from '../api/math'
-import { ago, clock, kg, num, titleCase } from '../format'
+import { delta, effectiveReps, estimateOneRm, today } from '../api/math'
+import { ago, clock, kg, setText, titleCase } from '../format'
 import { useDraft, usePrefs } from '../store'
 import ExercisePicker, { useExercises } from '../components/ExercisePicker'
-import { Async, Button, Delta, Empty, Input, Notice, Panel, PanelHead, Select } from '../components/ui'
+import { Async, Button, Delta, Empty, Input, Notice, Panel, PanelHead } from '../components/ui'
 
 const REST_CHOICES = [60, 90, 120, 180, 240]
 const filled = (set) => Number(set.reps) > 0 && set.weightKg !== '' && Number(set.weightKg) >= 0
+const cleanOf = (set) => effectiveReps(set.reps, set.cleanReps)
+const formBroke = (set) => filled(set) && cleanOf(set) < Number(set.reps)
 
 function useNow(active) {
   const [now, setNow] = useState(Date.now())
@@ -42,7 +44,7 @@ function StartScreen() {
           sets: Array.from({ length: e.targetSets }, (_, i) => {
             const before = last.get(e.exerciseId)
             const match = before?.[Math.min(i, before.length - 1)]
-            return { weightKg: match ? String(match.weightKg) : '', reps: String(e.targetReps), done: false }
+            return { weightKg: match ? String(match.weightKg) : '', reps: String(e.targetReps), cleanReps: '', done: false }
           }),
         })),
       })
@@ -91,7 +93,8 @@ function ExerciseBlock({ entry, exercise, previous }) {
   const { updateSet, addSet, removeSet, removeExercise, startRest } = useDraft.getState()
   const restSeconds = usePrefs((s) => s.restSeconds)
 
-  const best = Math.max(0, ...entry.sets.filter((s) => s.done && filled(s)).map((s) => estimateOneRm(Number(s.weightKg), Number(s.reps))))
+  // The live arrow only credits clean reps, same as the saved result will.
+  const best = Math.max(0, ...entry.sets.filter((s) => s.done && filled(s)).map((s) => estimateOneRm(Number(s.weightKg), cleanOf(s))))
   const live = previous && best > 0 ? delta(previous.bestOneRm, best) : null
 
   const toggle = (index, set) => {
@@ -107,40 +110,53 @@ function ExerciseBlock({ entry, exercise, previous }) {
           <h2 className="text-[22px] leading-6 font-semibold">{exercise?.name || 'Exercise'}</h2>
           <p className="mt-1 text-sm text-mute">
             {previous
-              ? `Last time (${ago(previous.sessionDate)}): ${previous.sets.map((s) => `${num(s.weightKg)} × ${s.reps}`).join(', ')}`
+              ? `Last time (${ago(previous.sessionDate)}): ${previous.sets.map(setText).join(', ')}`
               : `First time logging this. ${titleCase(exercise?.muscleGroup)}.`}
           </p>
         </div>
         {live && <Delta direction={live.direction} pct={live.pct} />}
       </div>
 
-      <div className="mt-3 grid grid-cols-[2rem_1fr_1fr_2.75rem_2rem] items-center gap-x-2 gap-y-2 px-4 pb-3">
-        <span className="text-xs font-medium text-mute">Set</span>
-        <span className="text-xs font-medium text-mute">Weight (kg)</span>
+      <div className="mt-3 grid grid-cols-[1.25rem_1fr_1fr_1fr_2.75rem_1.75rem] items-center gap-x-2 gap-y-2 px-4 pb-2">
+        <span />
+        <span className="text-xs font-medium text-mute">Kg</span>
         <span className="text-xs font-medium text-mute">Reps</span>
+        <span className="text-xs font-medium text-mute">Clean reps</span>
         <span className="text-xs font-medium text-mute">Done</span>
         <span />
-        {entry.sets.map((set, index) => (
-          <div key={index} className="contents">
-            <span className="num text-lg font-bold text-mute">{index + 1}</span>
-            <Input type="number" inputMode="decimal" min="0" step="0.5" value={set.weightKg} aria-label={`Set ${index + 1} weight in kg`}
-              className={set.done ? 'border-up bg-up-soft' : ''}
-              onChange={(e) => updateSet(entry.exerciseId, index, { weightKg: e.target.value })} />
-            <Input type="number" inputMode="numeric" min="1" step="1" value={set.reps} aria-label={`Set ${index + 1} reps`}
-              className={set.done ? 'border-up bg-up-soft' : ''}
-              onChange={(e) => updateSet(entry.exerciseId, index, { reps: e.target.value })} />
-            <button type="button" onClick={() => toggle(index, set)} aria-pressed={set.done}
-              aria-label={`Mark set ${index + 1} ${set.done ? 'not done' : 'done'}`}
-              className={`grid h-10 w-11 place-items-center rounded-md border ${set.done ? 'border-up bg-up text-white' : 'border-line text-mute'} ${!set.done && !filled(set) ? 'opacity-40' : ''}`}>
-              <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </button>
-            <button type="button" onClick={() => removeSet(entry.exerciseId, index)} aria-label={`Remove set ${index + 1}`}
-              className="grid h-10 w-8 place-items-center rounded-md text-mute hover:text-down">
-              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-            </button>
-          </div>
-        ))}
+        {entry.sets.map((set, index) => {
+          const tone = !set.done ? '' : formBroke(set) ? 'border-same bg-same-soft' : 'border-up bg-up-soft'
+          return (
+            <div key={index} className="contents">
+              <span className="num text-lg font-bold text-mute">{index + 1}</span>
+              <Input type="number" inputMode="decimal" min="0" step="0.5" value={set.weightKg} aria-label={`Set ${index + 1} weight in kg`}
+                className={`!px-2 ${tone}`}
+                onChange={(e) => updateSet(entry.exerciseId, index, { weightKg: e.target.value })} />
+              <Input type="number" inputMode="numeric" min="1" step="1" value={set.reps} aria-label={`Set ${index + 1} reps`}
+                className={`!px-2 ${tone}`}
+                onChange={(e) => updateSet(entry.exerciseId, index, { reps: e.target.value })} />
+              <Input type="number" inputMode="numeric" min="0" max={set.reps || undefined} step="1" value={set.cleanReps ?? ''}
+                placeholder={set.reps || 'all'} aria-label={`Set ${index + 1} reps with good form`}
+                className={`!px-2 ${tone}`}
+                onChange={(e) => updateSet(entry.exerciseId, index, { cleanReps: e.target.value })} />
+              <button type="button" onClick={() => toggle(index, set)} aria-pressed={set.done}
+                aria-label={`Mark set ${index + 1} ${set.done ? 'not done' : 'done'}`}
+                className={`grid h-10 w-11 place-items-center rounded-md border ${set.done ? 'border-up bg-up text-white' : 'border-line text-mute'} ${!set.done && !filled(set) ? 'opacity-40' : ''}`}>
+                <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </button>
+              <button type="button" onClick={() => removeSet(entry.exerciseId, index)} aria-label={`Remove set ${index + 1}`}
+                className="grid h-10 w-7 place-items-center rounded-md text-mute hover:text-down">
+                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+              </button>
+            </div>
+          )
+        })}
       </div>
+      <p className="px-4 pb-3 text-sm text-mute">
+        {entry.sets.some(formBroke)
+          ? 'Only clean reps count toward your arrow and PRs. All reps still count as volume.'
+          : 'Form broke before the last rep? Put the last good rep under Clean reps.'}
+      </p>
       <div className="flex gap-2 border-t border-line px-4 py-3">
         <Button variant="quiet" size="sm" onClick={() => addSet(entry.exerciseId)}>Add set</Button>
         <Button variant="danger" size="sm" onClick={() => removeExercise(entry.exerciseId)}>Remove exercise</Button>
@@ -199,6 +215,7 @@ function ActiveWorkout({ onFinished }) {
   const previousById = useMemo(() => new Map((previous.data || []).map((p) => [p.exerciseId, p])), [previous.data])
 
   const doneSets = draft.exercises.flatMap((e) => e.sets.filter((s) => s.done && filled(s)).map((s) => ({ ...s, exerciseId: e.exerciseId })))
+  const sloppyReps = doneSets.reduce((sum, s) => sum + Number(s.reps) - cleanOf(s), 0)
   const volume = doneSets.reduce((sum, s) => sum + Number(s.weightKg) * Number(s.reps), 0)
 
   const finish = useMutation({
@@ -207,7 +224,10 @@ function ActiveWorkout({ onFinished }) {
       templateId: draft.templateId,
       sessionDate: date,
       durationMinutes: date === today() ? Math.max(1, Math.round((Date.now() - draft.startedAt) / 60000)) : null,
-      sets: doneSets.map((s) => ({ exerciseId: s.exerciseId, weightKg: Number(s.weightKg), reps: Number(s.reps), restSeconds: null })),
+      sets: doneSets.map((s) => ({
+        exerciseId: s.exerciseId, weightKg: Number(s.weightKg), reps: Number(s.reps), restSeconds: null,
+        cleanReps: formBroke(s) ? cleanOf(s) : null,
+      })),
     }),
     onSuccess: (workout) => {
       draft.discard()
@@ -238,6 +258,7 @@ function ActiveWorkout({ onFinished }) {
           <p className="mt-1 text-mute">
             <span className="num text-lg font-bold text-ink">{clock((now - draft.startedAt) / 1000)}</span> elapsed,{' '}
             <span className="font-semibold text-ink">{doneSets.length}</span> sets, <span className="font-semibold text-ink">{kg(volume)}</span> lifted
+            {sloppyReps > 0 && <>, <span className="font-semibold text-same">{sloppyReps} reps off form</span></>}
           </p>
         </div>
       </div>
@@ -291,7 +312,10 @@ function Summary({ workout, onDone }) {
             <li key={e.exerciseId} className="flex items-center justify-between gap-3 border-b border-line px-4 py-3 last:border-0">
               <span className="min-w-0">
                 <span className="block truncate font-semibold">{e.exerciseName}{e.pr && <span className="ml-2 rounded bg-plate px-1.5 py-0.5 text-[11px] font-bold text-white">PR</span>}</span>
-                <span className="block text-sm text-mute">{e.sets.map((s) => `${num(s.weightKg)} × ${s.reps}`).join(', ')}</span>
+                <span className="block text-sm text-mute">{e.sets.map(setText).join(', ')}</span>
+                {e.formPct != null && e.formPct < 100 && (
+                  <span className="block text-sm font-medium text-same">Form held for {Math.round(e.formPct)}% of reps. Arrow counts clean reps only.</span>
+                )}
               </span>
               <Delta direction={e.deltaDirection} pct={e.deltaPct} size="lg" />
             </li>

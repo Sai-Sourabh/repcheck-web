@@ -56,3 +56,36 @@ describe('demo api', () => {
       recs: volume.muscles.map((m) => `${m.muscleGroup} ${m.totalSets} ${m.recommendation}`) }))
   })
 })
+
+describe('form check', () => {
+  beforeEach(() => resetDemo())
+  const press = 'ex-overhead-press'
+
+  it('credits only clean reps, and still counts every rep as volume', async () => {
+    await Promise.all((await demoApi.listWorkouts(0, 500)).items.map((w) => demoApi.deleteWorkout(w.id)))
+    const clean = await demoApi.createWorkout({ sessionDate: addDays(today(), -9), sets: [{ exerciseId: press, weightKg: 40, reps: 8 }] })
+    expect(clean.exercises[0]).toMatchObject({ formPct: 100, bestOneRm: 50.67 })
+    expect(clean.exercises[0].sets[0].cleanReps).toBeNull()
+
+    const sloppy = await demoApi.createWorkout({ sessionDate: addDays(today(), -6), sets: [{ exerciseId: press, weightKg: 45, reps: 8, cleanReps: 5 }] })
+    expect(sloppy.exercises[0]).toMatchObject({ bestOneRm: 52.5, formPct: 62.5 })
+    expect(sloppy.exercises[0].sets[0]).toMatchObject({ reps: 8, cleanReps: 5 })
+    expect(sloppy.totalVolumeKg).toBe(360)
+
+    await demoApi.createWorkout({ sessionDate: addDays(today(), -2), sets: [{ exerciseId: press, weightKg: 45, reps: 8, cleanReps: 6 }] })
+    const card = (await demoApi.lifts()).find((l) => l.exerciseId === press)
+    expect(card).toMatchObject({ formPct: 75, bestReps: 6, suggestedWeightKg: 40 })
+    expect(card.formWarning).toContain('Drop back to 40 kg')
+    expect((await demoApi.exerciseHistory(press))[1].formPct).toBe(62.5)
+    expect((await demoApi.previous([press]))[0].sets[0].cleanReps).toBe(6)
+    await expect(demoApi.createWorkout({ sets: [{ exerciseId: press, weightKg: 45, reps: 8, cleanReps: 9 }] })).rejects.toThrow('cleanReps')
+  })
+
+  it('shows one ego lift in the sample data', async () => {
+    const lifts = await demoApi.lifts()
+    const flagged = lifts.filter((l) => l.formWarning)
+    expect(flagged.map((l) => l.exerciseName)).toEqual(['Overhead Press'])
+    expect(flagged[0].suggestedWeightKg).toBeLessThan(flagged[0].bestWeightKg)
+    console.log(JSON.stringify(flagged[0]), lifts.map((l) => `${l.exerciseName} ${l.deltaDirection} ${l.formPct}`).join(' | '))
+  })
+})

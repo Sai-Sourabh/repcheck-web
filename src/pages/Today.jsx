@@ -65,9 +65,11 @@ function LiftBoard({ lifts }) {
             <button type="button" onClick={() => navigate(`/progress?tab=lifts&exercise=${lift.exerciseId}`)}
               className="grid w-full grid-cols-[1fr_auto_auto] items-center gap-x-3 px-4 py-2.5 text-left hover:bg-chalk/60 sm:grid-cols-[1fr_auto_7rem_5.5rem]">
               <span className="min-w-0">
-                <span className="block truncate font-semibold">{lift.exerciseName}{lift.pr && <span className="ml-2 rounded bg-plate px-1.5 py-0.5 text-[11px] font-bold text-white">PR</span>}</span>
+                <span className="block truncate font-semibold">{lift.exerciseName}{lift.pr && <span className="ml-2 rounded bg-plate px-1.5 py-0.5 text-[11px] font-bold text-white">PR</span>}
+                  {lift.formWarning && <span className="ml-2 rounded bg-same-soft px-1.5 py-0.5 text-[11px] font-bold text-same">Form slipping</span>}</span>
                 <span className="block truncate text-sm text-mute">
-                  {lift.bestWeightKg > 0 ? `${num(lift.bestWeightKg)} kg × ${lift.bestReps}` : `${lift.bestReps} reps`}, {ago(lift.sessionDate)}
+                  {lift.bestWeightKg > 0 ? `${num(lift.bestWeightKg)} kg × ${lift.bestReps}` : `${lift.bestReps} reps`}
+                  {lift.formPct != null && lift.formPct < 100 ? ` clean, form ${Math.round(lift.formPct)}%` : ''}, {ago(lift.sessionDate)}
                 </span>
               </span>
               <span className="hidden sm:block"><Spark values={lift.trend} direction={lift.deltaDirection} /></span>
@@ -110,7 +112,7 @@ export default function Today() {
       </div>
 
       <Panel>
-        <PanelHead title="Your lifts" hint="Estimated one-rep max from your best set, against the last time you did the lift." />
+        <PanelHead title="Your lifts" hint="Estimated one-rep max from your best set, against the last time you did the lift. Only reps with good form count." />
         <Async query={lifts} empty={<Empty title="No lifts yet" action={<Link to="/log"><Button>Log your first workout</Button></Link>}>Finish a workout and every exercise shows up here with its arrow.</Empty>}>
           {(data) => <LiftBoard lifts={data} />}
         </Async>

@@ -29,14 +29,14 @@ npm run dev
 
 On Vercel, add `VITE_API_URL` under Project Settings, Environment Variables, and redeploy. Also add the Vercel URL to `CORS_ALLOWED_ORIGINS` on the API.
 
-`src/api/demo.js` implements every endpoint in the browser with the same response shapes as the backend, and `src/api/math.js` mirrors the backend's `domain` package (Epley 1RM, ATL / CTL / TSB, progression rules), so both modes behave the same.
+`src/api/demo.js` implements every endpoint in the browser with the same response shapes as the backend, and `src/api/math.js` mirrors the backend's `domain` package (Epley 1RM, form check, ATL / CTL / TSB, progression rules), so both modes behave the same.
 
 ## Screens
 
 | Screen | What it does |
 | --- | --- |
 | Today | Lift board with green / red / amber arrows, weekly streaks, year heatmap, fatigue status |
-| Log | Start from a plan day or empty, last-time hints, live arrow, rest timer. The draft survives a refresh |
+| Log | Start from a plan day or empty, last-time hints, live arrow, rest timer, and a Clean reps field per set for when form breaks. The draft survives a refresh |
 | History | Every session with its sets, arrows and PRs. Deleting one recalculates everything |
 | Progress | Weekly sets per muscle with next week's plan, strength curves, PRs, 1RM calculator, fatigue trend, muscle balance |
 | Plans | Build and edit splits (PPL, upper / lower, custom) |

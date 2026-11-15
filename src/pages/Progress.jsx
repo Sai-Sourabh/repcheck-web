@@ -8,7 +8,7 @@ import {
 import { api } from '../api'
 import { addDays, estimateOneRm, today, weekStartOf } from '../api/math'
 import { dayMonth, kg, num, sets as fmtSets, shortDate, titleCase } from '../format'
-import { Async, Button, Delta, Empty, Field, Input, Panel, PanelHead, Segmented, Select } from '../components/ui'
+import { Async, Button, Delta, Empty, Field, Input, Notice, Panel, PanelHead, Segmented, Select } from '../components/ui'
 
 const TABS = [
   { value: 'volume', label: 'Weekly volume' },
@@ -127,6 +127,33 @@ function OneRmCalculator() {
   )
 }
 
+/** Share of reps done with good form, per session. Hidden while every rep has been clean. */
+function FormTrend({ points }) {
+  if (!points.some((p) => p.formPct != null && p.formPct < 100)) {
+    return <p className="px-4 pt-2 text-sm text-mute">Form: every logged rep on this lift was clean.</p>
+  }
+  return (
+    <div className="mt-3 border-t border-line pt-3">
+      <p className="px-4 text-sm text-mute">
+        <span className="font-semibold text-ink">Form score.</span> Share of reps done clean. Under 80% means the weight is ahead of your form.
+      </p>
+      <div className="h-32 px-1">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={points} margin={{ top: 8, right: 16, bottom: 0, left: -8 }}>
+            <CartesianGrid stroke="var(--color-line)" strokeDasharray="2 4" vertical={false} />
+            <XAxis dataKey="sessionDate" tickFormatter={dayMonth} tick={axis} tickLine={false} axisLine={{ stroke: 'var(--color-line)' }} minTickGap={32} />
+            <YAxis domain={[0, 100]} ticks={[0, 50, 80, 100]} tick={axis} tickLine={false} axisLine={false} width={48} tickFormatter={(v) => `${v}%`} />
+            <Tooltip contentStyle={tooltipStyle} labelFormatter={shortDate} formatter={(value) => [`${num(value, 0)}% of reps clean`, 'Form']} />
+            <ReferenceLine y={80} stroke="var(--color-same)" strokeDasharray="4 3" />
+            <Line type="monotone" dataKey="formPct" stroke="var(--color-same)" strokeWidth={2}
+              dot={{ r: 2.5, fill: 'var(--color-same)', strokeWidth: 0 }} isAnimationActive={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
+
 function Lifts() {
   const [params, setParams] = useSearchParams()
   const lifts = useQuery({ queryKey: ['lifts'], queryFn: api.lifts })
@@ -139,7 +166,7 @@ function Lifts() {
   return (
     <div className="space-y-4">
       <Panel>
-        <PanelHead title="Strength curve" hint="Estimated one-rep max from the best set of each session." />
+        <PanelHead title="Strength curve" hint="Estimated one-rep max from the best set of each session, counting clean reps only." />
         <Async query={lifts} empty={<Empty title="No lifts yet">Log a workout to start a curve.</Empty>}>
           {(data) => (
             <>
@@ -149,6 +176,7 @@ function Lifts() {
                 </Select>
                 {lift && <Delta direction={lift.deltaDirection} pct={lift.deltaPct} />}
               </div>
+              {lift?.formWarning && <div className="px-4 pb-3"><Notice tone="warn">{lift.formWarning}</Notice></div>}
               <Async query={history}>
                 {(points) => (
                   <>
@@ -165,12 +193,16 @@ function Lifts() {
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
+                    <FormTrend points={points} />
                     <ul className="mt-2 border-t border-line">
                       {[...points].reverse().slice(0, 6).map((p) => (
                         <li key={p.sessionDate + p.bestOneRm} className="flex items-center justify-between gap-3 border-b border-line px-4 py-2 last:border-0">
                           <span className="text-sm text-mute">{shortDate(p.sessionDate)}</span>
                           <span className="flex items-center gap-3">
-                            <span className="text-sm">{num(p.bestWeightKg)} × {p.bestReps}</span>
+                            <span className="text-sm">
+                              {num(p.bestWeightKg)} × {p.bestReps}
+                              {p.formPct != null && p.formPct < 100 && <span className="ml-1 font-medium text-same">form {Math.round(p.formPct)}%</span>}
+                            </span>
                             <span className="num w-14 text-right text-lg font-bold">{num(p.bestOneRm)}</span>
                             <span className="flex w-20 justify-end"><Delta direction={p.deltaDirection} pct={p.deltaPct} /></span>
                           </span>

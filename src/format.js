@@ -23,6 +23,12 @@ export function ago(isoDate) {
   return `${Math.round(days / 30)} months ago`
 }
 
+/** "100 × 8", or "100 × 8 (6 clean)" when form broke before the end. */
+export function setText(set) {
+  const base = `${num(set.weightKg)} × ${set.reps}`
+  return set.cleanReps != null && set.cleanReps < set.reps ? `${base} (${set.cleanReps} clean)` : base
+}
+
 export const titleCase = (s) => (s ? s.charAt(0) + s.slice(1).toLowerCase() : '')
 
 export function clock(totalSeconds) {

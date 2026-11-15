@@ -60,3 +60,22 @@ describe('weeks', () => {
     expect(addDays('2026-12-31', 1)).toBe('2027-01-01')
   })
 })
+
+describe('form check', () => {
+  it('counts clean reps only', async () => {
+    const { effectiveReps, formPct, egoLift } = await import('./math')
+    expect(effectiveReps(8, null)).toBe(8)
+    expect(effectiveReps('8', '')).toBe(8)
+    expect(effectiveReps(8, 6)).toBe(6)
+    expect(effectiveReps(8, 12)).toBe(8)
+    expect(estimateOneRm(100, effectiveReps(8, 6))).toBe(120)
+    expect(formPct(24, 18)).toBe(75)
+    expect(formPct(0, 0)).toBeNull()
+    const s = (topWeightKg, totalReps, cleanReps) => ({ topWeightKg, totalReps, cleanReps })
+    expect(egoLift([s(47.5, 18, 18), s(50, 18, 9), s(50, 18, 12)])).toMatchObject({ suggestedWeightKg: 47.5 })
+    expect(egoLift([s(40, 8, 8), s(45, 8, 5)])).toBeNull()
+    expect(egoLift([s(45, 8, 5), s(45, 8, 5), s(45, 8, 8)])).toBeNull()
+    expect(egoLift([s(50, 8, 8), s(50, 8, 5), s(50, 8, 5)])).toMatchObject({ suggestedWeightKg: null })
+    expect(egoLift([s(50, 10, 8), s(50, 10, 8)])).toBeNull()
+  })
+})

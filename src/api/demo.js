@@ -2,12 +2,13 @@
 // returning the same shapes as the Spring Boot backend. Lets the site run
 // with no server. Switch to the real API by setting VITE_API_URL.
 import {
-  FATIGUE_MESSAGES, LANDMARKS, MUSCLES, SEED_DAYS, addDays, daysBetween, delta, estimateOneRm, fatigueSeed,
-  fatigueSeries, fatigueStatus, recommend, round2, today, tsbPercent, weekStartOf,
+  FATIGUE_MESSAGES, LANDMARKS, MUSCLES, SEED_DAYS, addDays, daysBetween, delta, effectiveReps, egoLift,
+  estimateOneRm, fatigueSeed, fatigueSeries, fatigueStatus, formPct, recommend, round2, today, tsbPercent,
+  weekStartOf,
 } from './math'
 import { EXERCISES, buildDemoState } from './seed'
 
-const KEY = 'repcheck-demo-v1'
+const KEY = 'repcheck-demo-v2'
 let state = null
 
 function load() {
@@ -57,10 +58,18 @@ function histories() {
     for (const [exerciseId, sets] of byExercise) {
       let best = null
       let volume = 0
+      let topWeightKg = 0
+      let totalReps = 0
+      let cleanReps = 0
       for (const set of sets) {
-        const oneRm = estimateOneRm(set.weightKg, set.reps)
+        // Volume counts every rep; progress counts clean reps only.
+        const clean = effectiveReps(set.reps, set.cleanReps)
+        const oneRm = estimateOneRm(set.weightKg, clean)
         volume += set.weightKg * set.reps
-        if (!best || oneRm > best.oneRm || (oneRm === best.oneRm && set.reps > best.reps)) best = { ...set, oneRm }
+        topWeightKg = Math.max(topWeightKg, set.weightKg)
+        totalReps += set.reps
+        cleanReps += clean
+        if (!best || oneRm > best.oneRm || (oneRm === best.oneRm && clean > best.reps)) best = { ...set, reps: clean, oneRm }
       }
       const chain = chains.get(exerciseId) || []
       const metric = best.oneRm > 0 ? best.oneRm : best.reps
@@ -71,6 +80,7 @@ function histories() {
         exerciseId, sessionId: session.id, sessionDate: session.sessionDate, metric, bestOneRm: best.oneRm,
         bestWeightKg: best.weightKg, bestReps: best.reps, totalVolumeKg: round2(volume), totalSets: sets.length,
         deltaPct: d.pct, deltaDirection: d.direction, pr: !!previous && metric > bestEver,
+        topWeightKg, totalReps, cleanReps, formPct: formPct(totalReps, cleanReps),
       })
       chains.set(exerciseId, chain)
     }
@@ -182,14 +192,14 @@ function detail(session) {
       block = {
         exerciseId: set.exerciseId, exerciseName: exercise?.name || 'Unknown', muscleGroup: exercise?.muscleGroup,
         bestOneRm: row?.bestOneRm || 0, deltaPct: row?.deltaPct ?? null, deltaDirection: row?.deltaDirection || 'NEW',
-        pr: !!row?.pr, sets: [],
+        pr: !!row?.pr, formPct: row?.formPct ?? null, sets: [],
       }
       blocks.push(block)
     }
     counters[set.exerciseId] = (counters[set.exerciseId] || 0) + 1
     block.sets.push({
-      setNumber: counters[set.exerciseId], weightKg: set.weightKg, reps: set.reps,
-      estimatedOneRm: estimateOneRm(set.weightKg, set.reps), restSeconds: set.restSeconds ?? null,
+      setNumber: counters[set.exerciseId], weightKg: set.weightKg, reps: set.reps, cleanReps: set.cleanReps ?? null,
+      estimatedOneRm: estimateOneRm(set.weightKg, effectiveReps(set.reps, set.cleanReps)), restSeconds: set.restSeconds ?? null,
     })
   }
   return {
@@ -293,7 +303,12 @@ export const demoApi = {
     const session = {
       id: uid(), name: body.name?.trim() || null, sessionDate: date, templateId: body.templateId || null,
       durationMinutes: body.durationMinutes ?? null, notes: body.notes || null, createdAt: Date.now(),
-      sets: body.sets.map((s) => ({ exerciseId: s.exerciseId, weightKg: Number(s.weightKg), reps: Number(s.reps), restSeconds: s.restSeconds ?? null })),
+      sets: body.sets.map((s) => {
+        const reps = Number(s.reps)
+        if (s.cleanReps != null && Number(s.cleanReps) > reps) throw fail(400, 'cleanReps cannot be more than reps')
+        const cleanReps = s.cleanReps != null && Number(s.cleanReps) < reps ? Number(s.cleanReps) : null
+        return { exerciseId: s.exerciseId, weightKg: Number(s.weightKg), reps, cleanReps, restSeconds: s.restSeconds ?? null }
+      }),
     }
     load().sessions.push(session)
     save()
@@ -330,8 +345,8 @@ export const demoApi = {
       return {
         exerciseId: id, sessionDate: last.sessionDate, bestOneRm: last.bestOneRm,
         sets: session.sets.filter((s) => s.exerciseId === id).map((s, i) => ({
-          setNumber: i + 1, weightKg: s.weightKg, reps: s.reps, estimatedOneRm: estimateOneRm(s.weightKg, s.reps),
-          restSeconds: s.restSeconds ?? null,
+          setNumber: i + 1, weightKg: s.weightKg, reps: s.reps, cleanReps: s.cleanReps ?? null,
+          estimatedOneRm: estimateOneRm(s.weightKg, effectiveReps(s.reps, s.cleanReps)), restSeconds: s.restSeconds ?? null,
         })),
       }
     })
@@ -342,15 +357,17 @@ export const demoApi = {
     return [...histories()].filter(([id]) => exercises.has(id)).map(([id, chain]) => {
       const latest = chain.at(-1)
       const e = exercises.get(id)
+      const warning = egoLift(chain)
       return {
         exerciseId: id, exerciseName: e.name, muscleGroup: e.muscleGroup, sessionDate: latest.sessionDate,
         bestOneRm: latest.bestOneRm, bestWeightKg: latest.bestWeightKg, bestReps: latest.bestReps,
         deltaPct: latest.deltaPct, deltaDirection: latest.deltaDirection, pr: latest.pr,
+        formPct: latest.formPct, formWarning: warning?.message ?? null, suggestedWeightKg: warning?.suggestedWeightKg ?? null,
         trend: chain.slice(-8).map((r) => r.bestOneRm),
       }
     }).sort((a, b) => b.sessionDate.localeCompare(a.sessionDate) || a.exerciseName.localeCompare(b.exerciseName))
   }),
-  exerciseHistory: (id) => later(() => (histories().get(id) || []).map(({ metric, sessionId, exerciseId, totalSets, ...row }) => row)),
+  exerciseHistory: (id) => later(() => (histories().get(id) || []).map(({ metric, sessionId, exerciseId, totalSets, topWeightKg, totalReps, cleanReps, ...row }) => row)),
   volume: (date) => later(() => {
     const weekStart = weekStartOf(date || today())
     const previous = Object.fromEntries(buildWeek(addDays(weekStart, -7)).map((m) => [m.muscleGroup, m]))

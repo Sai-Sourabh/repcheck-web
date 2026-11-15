@@ -19,7 +19,8 @@ const emptyDraft = { active: false, startedAt: null, name: '', templateId: null,
 /**
  * The workout being logged right now. Persisted, so closing the tab or losing
  * signal in the gym does not lose the session.
- * exercises: [{ exerciseId, sets: [{ weightKg, reps, done }] }]
+ * exercises: [{ exerciseId, sets: [{ weightKg, reps, cleanReps, done }] }]
+ * cleanReps is '' when every rep was clean.
  */
 export const useDraft = create(
   persist(
@@ -32,14 +33,14 @@ export const useDraft = create(
       setName: (name) => set({ name }),
       addExercise: (exerciseId, sets) =>
         set((s) => s.exercises.some((e) => e.exerciseId === exerciseId) ? s
-          : { exercises: [...s.exercises, { exerciseId, sets: sets || [{ weightKg: '', reps: '', done: false }] }] }),
+          : { exercises: [...s.exercises, { exerciseId, sets: sets || [{ weightKg: '', reps: '', cleanReps: '', done: false }] }] }),
       removeExercise: (exerciseId) => set((s) => ({ exercises: s.exercises.filter((e) => e.exerciseId !== exerciseId) })),
       addSet: (exerciseId) =>
         set((s) => ({
           exercises: s.exercises.map((e) => {
             if (e.exerciseId !== exerciseId) return e
             const last = e.sets.at(-1)
-            return { ...e, sets: [...e.sets, { weightKg: last?.weightKg ?? '', reps: last?.reps ?? '', done: false }] }
+            return { ...e, sets: [...e.sets, { weightKg: last?.weightKg ?? '', reps: last?.reps ?? '', cleanReps: '', done: false }] }
           }),
         })),
       removeSet: (exerciseId, index) =>

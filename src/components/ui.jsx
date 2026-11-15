@@ -107,7 +107,7 @@ export function Spark({ values, direction = 'NEW', width = 72, height = 26 }) {
 }
 
 export function Notice({ tone = 'info', children }) {
-  const tones = { info: 'bg-plate-soft text-plate-dark', error: 'bg-down-soft text-down', ok: 'bg-up-soft text-up' }
+  const tones = { info: 'bg-plate-soft text-plate-dark', error: 'bg-down-soft text-down', ok: 'bg-up-soft text-up', warn: 'bg-same-soft text-same' }
   return <p role={tone === 'error' ? 'alert' : undefined} className={`rounded-md px-3 py-2 text-sm font-medium ${tones[tone]}`}>{children}</p>
 }
 

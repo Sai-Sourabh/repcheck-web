@@ -71,12 +71,13 @@ export const EXERCISES = [
 
 const id = (name) => EXERCISES.find((e) => e.name === name).id
 
-// name, start kg, weekly gain, sets, reps, step kg, ending: how the last session goes
+// name, start kg, weekly gain, sets, reps, step kg, ending: how the last session goes.
+// 'ego' adds weight for the last two sessions while form falls apart.
 const PLAN = {
   Push: [
     ['Barbell Bench Press', 70, 0.012, 4, 6, 2.5, 'up'],
     ['Incline Dumbbell Press', 24, 0.01, 3, 9, 2, 'flat'],
-    ['Overhead Press', 42.5, 0.008, 3, 6, 2.5, 'flat'],
+    ['Overhead Press', 42.5, 0.008, 3, 6, 2.5, 'ego'],
     ['Dumbbell Lateral Raise', 9, 0.012, 4, 14, 1, 'dip'],
     ['Triceps Pushdown', 25, 0.012, 3, 12, 2.5, 'up'],
   ],
@@ -122,7 +123,8 @@ export function buildDemoState() {
   }
 
   schedule.forEach(({ week, day, date }, index) => {
-    const isLast = schedule.findLastIndex((s) => s.day === day) === index
+    const sessionsLeft = schedule.slice(index + 1).filter((s) => s.day === day).length
+    const isLast = sessionsLeft === 0
     const sets = []
     for (const [name, base, gain, setCount, reps, step, ending] of PLAN[day]) {
       // A soft patch in weeks 9-10 gives the history a few red arrows.
@@ -134,11 +136,22 @@ export function buildDemoState() {
         if (ending === 'dip') { weight = lastSeen[name].weight; repAdjust = lastSeen[name].repAdjust - 2 }
         if (ending === 'up') { weight = lastSeen[name].weight + step; repAdjust = Math.max(0, lastSeen[name].repAdjust) }
       }
+      // Reps lost to bad form on every set of this exercise.
+      let formLoss = 0
+      if (ending === 'ego' && sessionsLeft <= 1 && lastSeen[name]) {
+        weight = lastSeen[name].weight + (sessionsLeft === 1 ? step : 0)
+        repAdjust = 0
+        formLoss = sessionsLeft === 1 ? 3 : 2
+      }
       lastSeen[name] = { weight, repAdjust }
+      // Now and then the final set of an exercise gets grindy.
+      const grindyLastSet = setCount > 1 && random() < 0.12
       for (let s = 0; s < setCount; s++) {
+        const done = Math.max(1, reps + repAdjust - (s === setCount - 1 ? 1 : 0))
+        const lost = formLoss || (grindyLastSet && s === setCount - 1 ? 2 : 0)
         sets.push({
-          exerciseId: id(name), weightKg: weight, restSeconds: 120,
-          reps: Math.max(1, reps + repAdjust - (s === setCount - 1 ? 1 : 0)),
+          exerciseId: id(name), weightKg: weight, restSeconds: 120, reps: done,
+          cleanReps: lost ? Math.max(0, done - lost) : null,
         })
       }
     }

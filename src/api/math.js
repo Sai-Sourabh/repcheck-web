@@ -19,6 +19,40 @@ export function delta(previous, current) {
   return { pct, direction: pct > 0 ? 'UP' : 'DOWN' }
 }
 
+// ---- form check: only clean reps count toward 1RM, arrows and PRs
+export const CLEAN_THRESHOLD_PCT = 80
+
+/** Reps that count as progress. Blank or missing means every rep was clean. */
+export function effectiveReps(reps, cleanReps) {
+  const total = Number(reps) || 0
+  if (cleanReps == null || cleanReps === '') return total
+  return Math.min(Math.max(Number(cleanReps) || 0, 0), total)
+}
+
+export const formPct = (totalReps, cleanReps) => (totalReps > 0 ? Math.round((cleanReps * 1000) / totalReps) / 10 : null)
+
+/** sessions: oldest first, each { topWeightKg, totalReps, cleanReps }. Returns a warning or null. */
+export function egoLift(sessions) {
+  const sloppy = (s) => {
+    const pct = formPct(s.totalReps, s.cleanReps)
+    return pct != null && pct < CLEAN_THRESHOLD_PCT
+  }
+  const n = sessions.length
+  if (n < 2 || !sloppy(sessions[n - 1]) || !sloppy(sessions[n - 2])) return null
+  const latest = sessions[n - 1]
+  for (let i = n - 3; i >= 0; i--) {
+    if (sloppy(sessions[i])) continue
+    if (sessions[i].topWeightKg < latest.topWeightKg) {
+      return {
+        message: `Form has broken down for 2 sessions since the weight went up. Drop back to ${sessions[i].topWeightKg} kg and own every rep.`,
+        suggestedWeightKg: sessions[i].topWeightKg,
+      }
+    }
+    break
+  }
+  return { message: 'Form has broken down for 2 sessions in a row. Lower the weight until every rep is clean.', suggestedWeightKg: null }
+}
+
 // ---- fatigue (ATL 7d, CTL 28d, TSB = CTL - ATL)
 const ATL_ALPHA = 1 - Math.exp(-1 / 7)
 const CTL_ALPHA = 1 - Math.exp(-1 / 28)
