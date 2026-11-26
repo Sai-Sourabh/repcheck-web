@@ -18,10 +18,14 @@ export function ago(isoDate) {
   const days = daysBetween(isoDate, today())
   if (days <= 0) return 'today'
   if (days === 1) return 'yesterday'
-  if (days < 14) return `${days} days ago`
-  if (days < 60) return `${Math.round(days / 7)} weeks ago`
-  return `${Math.round(days / 30)} months ago`
+  if (days < 7) return `${days} days ago`
+  // Past a week, a date reads better than "23 days ago".
+  return parseIso(isoDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
+
+const rules = new Intl.PluralRules('en-GB')
+/** plural(1, 'set') -> "1 set", plural(3, 'set') -> "3 sets" */
+export const plural = (n, one, many = `${one}s`) => `${n} ${rules.select(n) === 'one' ? one : many}`
 
 /** "100 × 8", or "100 × 8 (6 clean)" when form broke before the end. */
 export function setText(set) {

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { num } from '../format'
 
 export function Panel({ className = '', children, ...rest }) {
@@ -32,7 +33,7 @@ export function Button({ variant = 'primary', size = 'md', className = '', type 
   return (
     <button
       type={type}
-      className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-md font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${sizing} ${BUTTON[variant]} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-md press font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${sizing} ${BUTTON[variant]} ${className}`}
       {...rest}
     />
   )
@@ -48,7 +49,7 @@ export function Field({ label, children, className = '' }) {
 }
 
 export const inputClass =
-  'h-10 w-full rounded-md border border-line bg-white px-3 text-ink placeholder:text-mute/70 focus:border-plate focus:outline-none focus:ring-2 focus:ring-plate/25'
+  'h-10 w-full rounded-md border border-line bg-white px-3 text-ink placeholder:text-hint focus:border-plate focus:outline-none focus:ring-2 focus:ring-plate/25'
 
 export function Input(props) {
   return <input {...props} className={`${inputClass} ${props.className || ''}`} />
@@ -150,7 +151,7 @@ export function Segmented({ value, onChange, options, label }) {
           type="button"
           aria-selected={value === option.value}
           onClick={() => onChange(option.value)}
-          className={`h-8 shrink-0 rounded px-3 text-sm font-semibold transition-colors ${value === option.value ? 'bg-ink text-white' : 'text-mute hover:text-ink'}`}
+          className={`press h-8 shrink-0 rounded px-3 text-sm font-semibold ${value === option.value ? 'bg-ink text-white' : 'text-mute hover:text-ink'}`}
         >
           {option.label}
         </button>
@@ -161,18 +162,43 @@ export function Segmented({ value, onChange, options, label }) {
 
 /** Bottom sheet on phones, centred dialog on larger screens. */
 export function Sheet({ title, onClose, children }) {
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/50 sm:items-center sm:p-6" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="sheet-backdrop fixed inset-0 z-50 flex items-end justify-center bg-ink/50 sm:items-center sm:p-6" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div role="dialog" aria-modal="true" aria-label={title}
-        className="flex max-h-[88dvh] w-full flex-col rounded-t-xl bg-panel sm:max-w-lg sm:rounded-xl">
+        className="sheet-panel flex max-h-[88dvh] w-full flex-col rounded-t-xl bg-panel pb-[env(safe-area-inset-bottom)] sm:max-w-lg sm:rounded-xl sm:pb-0">
+        <span className="mx-auto mt-2 h-1 w-10 rounded-full bg-[#c3c9d1] sm:hidden" aria-hidden="true" />
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h2 className="text-xl font-semibold">{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="grid h-9 w-9 place-items-center rounded-md text-mute hover:text-ink">
+          <button type="button" onClick={onClose} aria-label="Close" className="press grid h-10 w-10 place-items-center rounded-md text-mute hover:text-ink">
             <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
       </div>
     </div>
+  )
+}
+
+const ICONS = {
+  up: 'M12 19V5m-6 6 6-6 6 6',
+  down: 'M12 5v14m-6-6 6 6 6-6',
+  plus: 'M12 5v14M5 12h14',
+  minus: 'M5 12h14',
+  close: 'M6 6l12 12M18 6L6 18',
+  check: 'M5 12.5l4.5 4.5L19 7',
+}
+
+/** One stroke family for every small icon in the app. */
+export function Icon({ name, className = 'h-4 w-4' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.25"
+      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={ICONS[name]} />
+    </svg>
   )
 }

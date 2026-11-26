@@ -63,7 +63,7 @@ function LiftBoard({ lifts }) {
         {shown.map((lift) => (
           <li key={lift.exerciseId} className="border-b border-line last:border-0">
             <button type="button" onClick={() => navigate(`/progress?tab=lifts&exercise=${lift.exerciseId}`)}
-              className="grid w-full grid-cols-[1fr_auto_auto] items-center gap-x-3 px-4 py-2.5 text-left hover:bg-chalk/60 sm:grid-cols-[1fr_auto_7rem_5.5rem]">
+              className="grid w-full grid-cols-[1fr_auto_auto] items-center gap-x-3 px-4 py-2.5 text-left transition-colors hover:bg-chalk/60 sm:grid-cols-[1fr_auto_7rem_5.5rem]">
               <span className="min-w-0">
                 <span className="block truncate font-semibold">{lift.exerciseName}{lift.pr && <span className="ml-2 rounded bg-plate px-1.5 py-0.5 text-[11px] font-bold text-white">PR</span>}
                   {lift.formWarning && <span className="ml-2 rounded bg-same-soft px-1.5 py-0.5 text-[11px] font-bold text-same">Form slipping</span>}</span>

@@ -45,12 +45,12 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-dvh md:pl-56">
-      <aside className="fixed inset-y-0 left-0 hidden w-56 flex-col border-r border-line bg-panel px-3 py-5 md:flex">
+      <aside className="fixed inset-y-0 left-0 hidden w-56 flex-col bg-ink px-3 py-5 text-white md:flex">
         <div className="px-2"><Logo /></div>
         <nav className="mt-8 flex flex-col gap-1" aria-label="Main">
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.to === '/'}
-              className={({ isActive }) => `flex h-11 items-center gap-3 rounded-md px-3 text-[15px] font-semibold ${isActive ? 'bg-ink text-white' : 'text-mute hover:bg-chalk hover:text-ink'}`}>
+              className={({ isActive }) => `press flex h-11 items-center gap-3 rounded-md px-3 text-[15px] font-semibold ${isActive ? 'bg-plate text-white' : 'text-rail-text hover:bg-white/10 hover:text-white'}`}>
               {item.icon}
               {item.label}
               {item.to === '/log' && draftActive && <span className="ml-auto h-2 w-2 rounded-full bg-up" aria-label="Workout in progress" />}
@@ -73,7 +73,7 @@ export default function Layout({ children }) {
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-line bg-panel pb-[env(safe-area-inset-bottom)] md:hidden">
         {NAV.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.to === '/'}
-            className={({ isActive }) => `relative flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-semibold ${isActive ? 'text-plate' : 'text-mute'}`}>
+            className={({ isActive }) => `press relative flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-semibold ${isActive ? 'text-plate' : 'text-mute'}`}>
             {item.icon}
             {item.label}
             {item.to === '/log' && draftActive && <span className="absolute top-2 right-1/4 h-2 w-2 rounded-full bg-up" aria-label="Workout in progress" />}

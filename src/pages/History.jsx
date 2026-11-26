@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api'
-import { kg, setText, shortDate } from '../format'
-import { Async, Button, Delta, Empty, Loading, Notice, Panel } from '../components/ui'
+import { kg, plural, setText, shortDate } from '../format'
+import { Async, Button, Delta, Empty, Icon, Loading, Notice, Panel } from '../components/ui'
 
 const PAGE = 15
 
@@ -61,7 +61,7 @@ export default function History() {
     <div className="space-y-4">
       <div>
         <h1 className="text-4xl leading-none font-bold md:text-5xl">History</h1>
-        <p className="mt-2 text-mute">{total ? `${total} workouts logged. Tap one to see every set.` : 'Every workout you finish lands here.'}</p>
+        <p className="mt-2 text-mute">{total ? `${plural(total, 'workout')} logged. Tap one to see every set.` : 'Every workout you finish lands here.'}</p>
       </div>
       <Panel>
         {pages.isPending && <Loading />}
@@ -73,17 +73,17 @@ export default function History() {
           {items.map((w) => (
             <li key={w.id} className="border-b border-line last:border-0">
               <button type="button" aria-expanded={open === w.id} onClick={() => setOpen(open === w.id ? null : w.id)}
-                className="grid w-full grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 text-left hover:bg-chalk/60">
+                className="grid w-full grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-chalk/60">
                 <span className="min-w-0">
                   <span className="block truncate font-semibold">{w.name || 'Workout'}</span>
                   <span className="block truncate text-sm text-mute">
-                    {shortDate(w.sessionDate)}, {w.setCount} sets, {kg(w.totalVolumeKg)}{w.durationMinutes ? `, ${w.durationMinutes} min` : ''}
+                    {shortDate(w.sessionDate)}, {plural(w.setCount, 'set')}, {kg(w.totalVolumeKg)}{w.durationMinutes ? `, ${w.durationMinutes} min` : ''}
                   </span>
                 </span>
                 <span className="flex items-center gap-1.5">
                   {w.prCount > 0 && <span className="num rounded bg-plate px-1.5 py-0.5 text-sm font-bold text-white">{w.prCount} PR</span>}
-                  {w.upCount > 0 && <span className="num rounded bg-up-soft px-1.5 py-0.5 text-sm font-bold text-up">▲ {w.upCount}</span>}
-                  {w.downCount > 0 && <span className="num rounded bg-down-soft px-1.5 py-0.5 text-sm font-bold text-down">▼ {w.downCount}</span>}
+                  {w.upCount > 0 && <span className="num inline-flex items-center gap-0.5 rounded bg-up-soft px-1.5 py-0.5 text-sm font-bold text-up" aria-label={`${w.upCount} up`}><Icon name="up" className="h-3.5 w-3.5" />{w.upCount}</span>}
+                  {w.downCount > 0 && <span className="num inline-flex items-center gap-0.5 rounded bg-down-soft px-1.5 py-0.5 text-sm font-bold text-down" aria-label={`${w.downCount} down`}><Icon name="down" className="h-3.5 w-3.5" />{w.downCount}</span>}
                 </span>
               </button>
               {open === w.id && <Detail id={w.id} />}

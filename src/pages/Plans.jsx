@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api'
+import { plural } from '../format'
 import ExercisePicker, { useExercises } from '../components/ExercisePicker'
-import { Async, Button, Empty, Field, Input, Notice, Panel, PanelHead, Select } from '../components/ui'
+import { Async, Button, Empty, Field, Icon, Input, Notice, Panel, PanelHead, Select } from '../components/ui'
 
 const SPLITS = ['PPL', 'Upper / Lower', 'Full body', 'Bro split', 'Custom']
 const PRESETS = {
@@ -23,9 +24,9 @@ const move = (list, from, to) => {
 function Stepper({ label, value, min, max, onChange }) {
   return (
     <span className="inline-flex items-center gap-1" role="group" aria-label={label}>
-      <button type="button" aria-label={`Fewer ${label}`} onClick={() => onChange(Math.max(min, value - 1))} className="h-8 w-8 rounded-md border border-line font-bold text-mute">-</button>
+      <button type="button" aria-label={`Fewer ${label}`} onClick={() => onChange(Math.max(min, value - 1))} className="press grid h-9 w-9 place-items-center rounded-md border border-line text-mute hover:border-mute"><Icon name="minus" /></button>
       <span className="num w-7 text-center text-lg font-bold">{value}</span>
-      <button type="button" aria-label={`More ${label}`} onClick={() => onChange(Math.min(max, value + 1))} className="h-8 w-8 rounded-md border border-line font-bold text-mute">+</button>
+      <button type="button" aria-label={`More ${label}`} onClick={() => onChange(Math.min(max, value + 1))} className="press grid h-9 w-9 place-items-center rounded-md border border-line text-mute hover:border-mute"><Icon name="plus" /></button>
     </span>
   )
 }
@@ -87,9 +88,9 @@ function Editor({ initial, onClose }) {
                   <Stepper label="reps" value={exercise.targetReps} min={1} max={30} onChange={(v) => setExercise(dayIndex, exIndex, { targetReps: v })} />
                 </span>
                 <span className="flex gap-1">
-                  <button type="button" aria-label="Move up" disabled={exIndex === 0} onClick={() => setDay(dayIndex, { exercises: move(day.exercises, exIndex, exIndex - 1) })} className="h-8 w-8 rounded-md border border-line text-mute disabled:opacity-30">↑</button>
-                  <button type="button" aria-label="Move down" disabled={exIndex === day.exercises.length - 1} onClick={() => setDay(dayIndex, { exercises: move(day.exercises, exIndex, exIndex + 1) })} className="h-8 w-8 rounded-md border border-line text-mute disabled:opacity-30">↓</button>
-                  <button type="button" aria-label="Remove exercise" onClick={() => setDay(dayIndex, { exercises: day.exercises.filter((_, i) => i !== exIndex) })} className="h-8 w-8 rounded-md border border-line text-down">×</button>
+                  <button type="button" aria-label="Move up" disabled={exIndex === 0} onClick={() => setDay(dayIndex, { exercises: move(day.exercises, exIndex, exIndex - 1) })} className="press grid h-9 w-9 place-items-center rounded-md border border-line text-mute disabled:opacity-30"><Icon name="up" /></button>
+                  <button type="button" aria-label="Move down" disabled={exIndex === day.exercises.length - 1} onClick={() => setDay(dayIndex, { exercises: move(day.exercises, exIndex, exIndex + 1) })} className="press grid h-9 w-9 place-items-center rounded-md border border-line text-mute disabled:opacity-30"><Icon name="down" /></button>
+                  <button type="button" aria-label="Remove exercise" onClick={() => setDay(dayIndex, { exercises: day.exercises.filter((_, i) => i !== exIndex) })} className="press grid h-9 w-9 place-items-center rounded-md border border-line text-down hover:border-down"><Icon name="close" /></button>
                 </span>
               </li>
             ))}
@@ -137,7 +138,7 @@ export default function Plans() {
       <Async query={templates} empty={<Panel><Empty title="No plans yet" action={<Button onClick={() => setEditing(blank())}>Create your first plan</Button>}>Set up PPL, upper / lower, or any split you run.</Empty></Panel>}>
         {(data) => data.map((template) => (
           <Panel key={template.id}>
-            <PanelHead title={template.name} hint={`${template.splitType || 'Custom'}, ${template.days.length} ${template.days.length === 1 ? 'day' : 'days'}`}
+            <PanelHead title={template.name} hint={`${template.splitType || 'Custom'}, ${plural(template.days.length, 'day')}`}
               action={
                 <span className="flex gap-2">
                   <Button variant="quiet" size="sm" onClick={() => setEditing(JSON.parse(JSON.stringify(template)))}>Edit</Button>

@@ -16,14 +16,23 @@
   --color-plate: #2447e6;
   --color-plate-dark: #1a36b8;
   --color-plate-soft: #e3e8fd;
-  --color-up: #0b8f4f;
+  /* Arrow colours are dark enough for 4.5:1 on their own tints. */
+  --color-up: #087a43;
   --color-up-soft: #ddf3e7;
-  --color-down: #d93025;
+  --color-down: #b8261c;
   --color-down-soft: #fbe3e0;
-  --color-same: #a16a09;
+  --color-same: #8a5a06;
   --color-same-soft: #fbefd2;
+  --color-hint: #6c7480;
+  --color-rail-text: #aeb6c0;
   --font-sans: "Barlow", system-ui, sans-serif;
   --font-display: "Barlow Condensed", "Barlow", system-ui, sans-serif;
+}
+
+:root {
+  /* Strong curves: ease-out for feedback and entrances, the drawer curve for sheets. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 html {
@@ -31,6 +40,15 @@ html {
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-text-size-adjust: 100%;
+  /* Browser-drawn surfaces carry the palette too. */
+  accent-color: var(--color-plate);
+  caret-color: var(--color-plate);
+  scrollbar-color: #b9c0c8 transparent;
+  -webkit-tap-highlight-color: transparent;
+}
+::selection {
+  background: var(--color-plate);
+  color: #fff;
 }
 body {
   margin: 0;
@@ -39,7 +57,13 @@ body {
 h1, h2, h3, .num {
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.005em;
+}
+h1 {
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+input[type="number"], td, .tabular {
+  font-variant-numeric: tabular-nums;
 }
 :focus-visible {
   outline: 2px solid var(--color-plate);
@@ -63,9 +87,66 @@ input[type="number"]::-webkit-inner-spin-button {
 .recharts-wrapper *:focus {
   outline: none;
 }
+/* ---------- motion ---------- */
+
+/* Anything pressable answers the finger. */
+.press {
+  transition: transform 160ms var(--ease-out), background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.press:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Bottom sheet on phones, small centred dialog on wider screens. */
+.sheet-backdrop {
+  animation: fade-in 200ms ease-out;
+}
+.sheet-panel {
+  animation: sheet-up 420ms var(--ease-drawer);
+}
+@media (min-width: 640px) {
+  .sheet-panel {
+    animation: pop-in 220ms var(--ease-out);
+  }
+}
+
+/* Rest timer rises from the nav it sits on. */
+.rest-bar {
+  animation: rise-in 280ms var(--ease-out);
+}
+
+/* The one authored moment: results land row by row after a workout is saved. */
+.reveal-row {
+  animation: row-in 380ms var(--ease-out) both;
+}
+.reveal-chip {
+  animation: chip-in 320ms var(--ease-out) both;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.96); }
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(100%); }
+}
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(10px); }
+}
+@keyframes chip-in {
+  from { opacity: 0; transform: scale(0.85); filter: blur(2px); }
+}
+
+/* Reduced motion keeps the fades that explain what changed and drops the movement. */
 @media (prefers-reduced-motion: reduce) {
-  * {
-    animation: none !important;
-    transition: none !important;
+  .press:active:not(:disabled) { transform: none; }
+  .sheet-panel, .rest-bar, .reveal-row, .reveal-chip {
+    animation-name: fade-in;
+    animation-duration: 160ms;
   }
 }
