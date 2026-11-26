@@ -5,7 +5,8 @@ import { DEMO, api } from '../api'
 import { parseIso, today } from '../api/math'
 import { dayMonth, num, shortDate, titleCase } from '../format'
 import { useAuth } from '../store'
-import { Async, Button, Empty, Field, Input, Notice, Panel, PanelHead, Select } from '../components/ui'
+import ThemePicker from '../components/ThemePicker'
+import { Async, Button, CountUp, Empty, Field, Input, Notice, PageTitle, Panel, PanelHead, Select } from '../components/ui'
 
 const ACTIVITIES = ['WALK', 'RUN', 'CYCLE', 'SWIM', 'OTHER']
 const numberOrNull = (v) => (v === '' || v == null ? null : Number(v))
@@ -31,17 +32,17 @@ function Steps() {
           return (
             <div className="px-4 pb-4">
               <p className="flex flex-wrap items-baseline gap-x-2">
-                <span className="num text-5xl leading-none font-bold">{num(data.totalSteps, 0)}</span>
+                <span className="num text-5xl leading-none font-extrabold"><CountUp value={data.totalSteps} digits={0} /></span>
                 <span className="text-mute">of {num(data.goal, 0)}</span>
               </p>
               <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-chalk" role="progressbar" aria-label="Weekly steps" aria-valuemin={0} aria-valuemax={data.goal} aria-valuenow={Math.min(data.totalSteps, data.goal)}>
-                <div className={`h-full rounded-full ${left <= 0 ? 'bg-up' : 'bg-plate'}`} style={{ width: `${pct}%` }} />
+                <div className={`grow-x h-full rounded-full ${left <= 0 ? 'bg-up' : 'bg-plate'}`} style={{ width: `${pct}%` }} />
               </div>
               <p className="mt-2 text-sm text-mute">{left <= 0 ? 'Goal hit. This week counts toward your streak.' : `${num(left, 0)} to go to keep your streak.`}</p>
               <div className="mt-4 grid h-28 grid-cols-7 items-end gap-2" aria-hidden="true">
                 {data.days.map((d) => (
                   <div key={d.date} className="flex h-full flex-col justify-end">
-                    <div className={`rounded-t ${d.date === today() ? 'bg-plate' : 'bg-ink/80'}`} style={{ height: `${(d.steps / peak) * 100}%`, minHeight: d.steps ? 3 : 0 }} />
+                    <div className={`grow-y rounded-t ${d.date === today() ? 'bg-plate' : 'bg-solid'}`} style={{ height: `${(d.steps / peak) * 100}%`, minHeight: d.steps ? 3 : 0 }} />
                   </div>
                 ))}
               </div>
@@ -142,7 +143,7 @@ function BodyWeight() {
                   <CartesianGrid stroke="var(--color-line)" strokeDasharray="2 4" vertical={false} />
                   <XAxis dataKey="logDate" tickFormatter={dayMonth} tick={{ fontSize: 12, fill: 'var(--color-mute)' }} tickLine={false} axisLine={{ stroke: 'var(--color-line)' }} minTickGap={40} />
                   <YAxis domain={['dataMin - 1', 'dataMax + 1']} tick={{ fontSize: 12, fill: 'var(--color-mute)' }} tickLine={false} axisLine={false} width={48} tickFormatter={(v) => num(v, 0)} />
-                  <Tooltip contentStyle={{ borderRadius: 6, border: '1px solid var(--color-line)', fontSize: 13 }} labelFormatter={shortDate} formatter={(v) => [`${num(v)} kg`, 'Weight']} />
+                  <Tooltip contentStyle={{ borderRadius: 6, border: '1px solid var(--color-line)', fontSize: 13, background: 'var(--color-panel)', color: 'var(--color-ink)' }} labelFormatter={shortDate} formatter={(v) => [`${num(v)} kg`, 'Weight']} />
                   <Line type="monotone" dataKey="weightKg" stroke="var(--color-ink)" strokeWidth={2} dot={{ r: 2.5, fill: 'var(--color-ink)', strokeWidth: 0 }} isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
@@ -192,9 +193,13 @@ export default function Activity() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-4xl leading-none font-bold md:text-5xl">Activity</h1>
+        <PageTitle>Activity</PageTitle>
         <p className="mt-2 text-mute">Steps, cardio and body weight, outside the weight room.</p>
       </div>
+      <Panel>
+        <PanelHead title="Look" hint="Pick a colour theme. Saved on this device." />
+        <div className="px-4 pb-4"><ThemePicker /></div>
+      </Panel>
       <Steps />
       <Cardio />
       <BodyWeight />

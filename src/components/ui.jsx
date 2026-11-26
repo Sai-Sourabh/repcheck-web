@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { num } from '../format'
 
 export function Panel({ className = '', children, ...rest }) {
@@ -13,7 +13,7 @@ export function PanelHead({ title, hint, action }) {
   return (
     <div className="flex items-end justify-between gap-3 px-4 pt-4 pb-3">
       <div className="min-w-0">
-        <h2 className="text-[22px] leading-6 font-semibold">{title}</h2>
+        <h2 className="text-2xl leading-6 font-bold">{title}</h2>
         {hint && <p className="mt-1 text-sm text-mute">{hint}</p>}
       </div>
       {action}
@@ -22,10 +22,10 @@ export function PanelHead({ title, hint, action }) {
 }
 
 const BUTTON = {
-  primary: 'bg-plate text-white hover:bg-plate-dark',
+  primary: 'bg-plate text-on-plate hover:bg-plate-dark',
   quiet: 'bg-transparent text-ink border border-line hover:border-mute',
   danger: 'bg-transparent text-down border border-line hover:border-down',
-  ink: 'bg-ink text-white hover:bg-black',
+  ink: 'bg-solid text-on-solid hover:opacity-90',
 }
 
 export function Button({ variant = 'primary', size = 'md', className = '', type = 'button', ...rest }) {
@@ -49,7 +49,7 @@ export function Field({ label, children, className = '' }) {
 }
 
 export const inputClass =
-  'h-10 w-full rounded-md border border-line bg-white px-3 text-ink placeholder:text-hint focus:border-plate focus:outline-none focus:ring-2 focus:ring-plate/25'
+  'h-10 w-full rounded-md border border-line bg-field px-3 text-ink placeholder:text-hint focus:border-plate focus:outline-none focus:ring-2 focus:ring-plate/25'
 
 export function Input(props) {
   return <input {...props} className={`${inputClass} ${props.className || ''}`} />
@@ -108,7 +108,7 @@ export function Spark({ values, direction = 'NEW', width = 72, height = 26 }) {
 }
 
 export function Notice({ tone = 'info', children }) {
-  const tones = { info: 'bg-plate-soft text-plate-dark', error: 'bg-down-soft text-down', ok: 'bg-up-soft text-up', warn: 'bg-same-soft text-same' }
+  const tones = { info: 'bg-plate-soft text-accent', error: 'bg-down-soft text-down', ok: 'bg-up-soft text-up', warn: 'bg-same-soft text-same' }
   return <p role={tone === 'error' ? 'alert' : undefined} className={`rounded-md px-3 py-2 text-sm font-medium ${tones[tone]}`}>{children}</p>
 }
 
@@ -151,7 +151,7 @@ export function Segmented({ value, onChange, options, label }) {
           type="button"
           aria-selected={value === option.value}
           onClick={() => onChange(option.value)}
-          className={`press h-8 shrink-0 rounded px-3 text-sm font-semibold ${value === option.value ? 'bg-ink text-white' : 'text-mute hover:text-ink'}`}
+          className={`press h-8 shrink-0 rounded px-3 text-sm font-semibold ${value === option.value ? 'bg-solid text-on-solid' : 'text-mute hover:text-ink'}`}
         >
           {option.label}
         </button>
@@ -168,10 +168,10 @@ export function Sheet({ title, onClose, children }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
   return (
-    <div className="sheet-backdrop fixed inset-0 z-50 flex items-end justify-center bg-ink/50 sm:items-center sm:p-6" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="sheet-backdrop fixed inset-0 z-50 flex items-end justify-center bg-backdrop sm:items-center sm:p-6" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div role="dialog" aria-modal="true" aria-label={title}
         className="sheet-panel flex max-h-[88dvh] w-full flex-col rounded-t-xl bg-panel pb-[env(safe-area-inset-bottom)] sm:max-w-lg sm:rounded-xl sm:pb-0">
-        <span className="mx-auto mt-2 h-1 w-10 rounded-full bg-[#c3c9d1] sm:hidden" aria-hidden="true" />
+        <span className="mx-auto mt-2 h-1 w-10 rounded-full bg-mute/40 sm:hidden" aria-hidden="true" />
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h2 className="text-xl font-semibold">{title}</h2>
           <button type="button" onClick={onClose} aria-label="Close" className="press grid h-10 w-10 place-items-center rounded-md text-mute hover:text-ink">
@@ -201,4 +201,39 @@ export function Icon({ name, className = 'h-4 w-4' }) {
       <path d={ICONS[name]} />
     </svg>
   )
+}
+
+/** Big page title that rises into place. Pass `key` changes to replay it. */
+export function PageTitle({ children, className = '' }) {
+  return (
+    <h1 className={`title-in text-5xl leading-[0.9] md:text-7xl ${className}`}>{children}</h1>
+  )
+}
+
+/** A small badge for personal records, stamped in on first render. */
+export function PrBadge({ stamp = false }) {
+  return (
+    <span className={`ml-2 inline-block rounded bg-plate px-1.5 py-0.5 align-middle text-[11px] font-bold text-on-plate ${stamp ? 'stamp' : ''}`}>PR</span>
+  )
+}
+
+/** Counts up from zero once, on first mount. */
+export function CountUp({ value, digits = 1, duration = 900 }) {
+  const [shown, setShown] = useState(value)
+  const started = useRef(false)
+  useEffect(() => {
+    if (started.current || !Number.isFinite(value)) return undefined
+    started.current = true
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
+    let frame
+    const start = performance.now()
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / duration)
+      setShown(value * (1 - Math.pow(1 - t, 3)))
+      if (t < 1) frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [value, duration])
+  return num(started.current && shown !== value ? shown : value, digits)
 }

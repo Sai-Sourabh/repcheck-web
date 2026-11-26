@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api'
 import { kg, plural, setText, shortDate } from '../format'
-import { Async, Button, Delta, Empty, Icon, Loading, Notice, Panel } from '../components/ui'
+import { Async, Button, Delta, Empty, Icon, Loading, Notice, PageTitle, Panel, PrBadge } from '../components/ui'
 
 const PAGE = 15
 
@@ -21,7 +21,7 @@ function Detail({ id }) {
               {data.exercises.map((e) => (
                 <li key={e.exerciseId} className="flex items-start justify-between gap-3">
                   <span className="min-w-0">
-                    <span className="block font-semibold">{e.exerciseName}{e.pr && <span className="ml-2 rounded bg-plate px-1.5 py-0.5 text-[11px] font-bold text-white">PR</span>}</span>
+                    <span className="block font-semibold">{e.exerciseName}{e.pr && <PrBadge />}</span>
                     <span className="block text-sm text-mute">{e.sets.map(setText).join(', ')}</span>
                     {e.bestOneRm > 0 && (
                       <span className="block text-sm text-mute">
@@ -60,7 +60,7 @@ export default function History() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-4xl leading-none font-bold md:text-5xl">History</h1>
+        <PageTitle>History</PageTitle>
         <p className="mt-2 text-mute">{total ? `${plural(total, 'workout')} logged. Tap one to see every set.` : 'Every workout you finish lands here.'}</p>
       </div>
       <Panel>
@@ -81,7 +81,7 @@ export default function History() {
                   </span>
                 </span>
                 <span className="flex items-center gap-1.5">
-                  {w.prCount > 0 && <span className="num rounded bg-plate px-1.5 py-0.5 text-sm font-bold text-white">{w.prCount} PR</span>}
+                  {w.prCount > 0 && <span className="num rounded bg-plate px-1.5 py-0.5 text-sm font-bold text-on-plate">{w.prCount} PR</span>}
                   {w.upCount > 0 && <span className="num inline-flex items-center gap-0.5 rounded bg-up-soft px-1.5 py-0.5 text-sm font-bold text-up" aria-label={`${w.upCount} up`}><Icon name="up" className="h-3.5 w-3.5" />{w.upCount}</span>}
                   {w.downCount > 0 && <span className="num inline-flex items-center gap-0.5 rounded bg-down-soft px-1.5 py-0.5 text-sm font-bold text-down" aria-label={`${w.downCount} down`}><Icon name="down" className="h-3.5 w-3.5" />{w.downCount}</span>}
                 </span>

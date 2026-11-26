@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api'
 import { plural } from '../format'
 import ExercisePicker, { useExercises } from '../components/ExercisePicker'
-import { Async, Button, Empty, Field, Icon, Input, Notice, Panel, PanelHead, Select } from '../components/ui'
+import { Async, Button, Empty, Field, Icon, Input, Notice, PageTitle, Panel, PanelHead, Select } from '../components/ui'
 
 const SPLITS = ['PPL', 'Upper / Lower', 'Full body', 'Bro split', 'Custom']
 const PRESETS = {
@@ -62,7 +62,7 @@ function Editor({ initial, onClose }) {
 
   return (
     <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); save.mutate() }}>
-      <h1 className="text-4xl leading-none font-bold md:text-5xl">{plan.id ? 'Edit plan' : 'New plan'}</h1>
+      <PageTitle>{plan.id ? 'Edit plan' : 'New plan'}</PageTitle>
       <Panel className="grid gap-3 p-4 sm:grid-cols-2">
         <Field label="Plan name"><Input required value={plan.name} onChange={(e) => setPlan({ ...plan, name: e.target.value })} placeholder="Push Pull Legs" /></Field>
         <Field label="Split">
@@ -130,7 +130,7 @@ export default function Plans() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-4xl leading-none font-bold md:text-5xl">Plans</h1>
+          <PageTitle>Plans</PageTitle>
           <p className="mt-2 text-mute">Your splits. Each day becomes a one-tap start on the Log screen.</p>
         </div>
         <Button size="lg" onClick={() => setEditing(blank())}>New plan</Button>

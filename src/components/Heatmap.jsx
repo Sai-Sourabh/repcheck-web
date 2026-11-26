@@ -3,7 +3,7 @@ import { addDays, parseIso, today, weekStartOf } from '../api/math'
 import { kg, shortDate } from '../format'
 
 const WEEKS = 53
-const SHADES = ['#dfe3e8', '#b9c5f8', '#7f95f1', '#2447e6', '#14277f']
+const SHADES = [0, 1, 2, 3, 4].map((i) => `var(--color-heat-${i})`)
 const DAY_LABELS = ['Mon', '', 'Wed', '', 'Fri', '', '']
 
 /** GitHub-style year of training. One brick per day, darker = more volume lifted. */
@@ -58,8 +58,8 @@ export default function Heatmap({ days }) {
                 <span
                   key={day.date}
                   title={day.sessions ? `${shortDate(day.date)}: ${kg(day.volumeKg)} lifted` : `${shortDate(day.date)}: rest`}
-                  className="rounded-[3px]"
-                  style={{ gridColumn: w + 2, gridRow: i + 2, background: SHADES[shade(day.volumeKg)] }}
+                  className="brick-in rounded-[3px]"
+                  style={{ gridColumn: w + 2, gridRow: i + 2, background: SHADES[shade(day.volumeKg)], animationDelay: `${w * 12}ms` }}
                 />
               ),
             ),

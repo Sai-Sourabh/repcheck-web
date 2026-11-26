@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { api } from '../api'
 import { useAuth } from '../store'
 import { Logo } from '../components/Layout'
-import { Button, Field, Input, Notice, Panel } from '../components/ui'
+import { Button, Field, Input, Notice, PageTitle, Panel } from '../components/ui'
 
 export default function Auth() {
   const signIn = useAuth((s) => s.signIn)
@@ -19,7 +19,7 @@ export default function Auth() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center px-4 py-10">
       <Logo />
-      <h1 className="mt-8 text-4xl leading-none font-bold">{mode === 'login' ? 'Log in' : 'Create your account'}</h1>
+      <PageTitle key={mode} className="mt-8">{mode === 'login' ? 'Log in' : 'Create your account'}</PageTitle>
       <p className="mt-2 text-mute">Track every set and see if your lifts are going up.</p>
       <Panel className="mt-6 p-4">
         <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); submit.mutate() }}>
@@ -37,7 +37,7 @@ export default function Auth() {
           </Button>
         </form>
       </Panel>
-      <button type="button" className="mt-4 text-left text-sm font-semibold text-plate"
+      <button type="button" className="mt-4 text-left text-sm font-semibold text-accent"
         onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); submit.reset() }}>
         {mode === 'login' ? 'New here? Create an account' : 'Already have an account? Log in'}
       </button>

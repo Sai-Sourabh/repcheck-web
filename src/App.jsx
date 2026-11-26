@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { DEMO, api } from './api'
 import { useAuth } from './store'
 import Layout from './components/Layout'
+import { useApplyTheme } from './components/ThemePicker'
 import Auth from './pages/Auth'
 import Today from './pages/Today'
 import LogWorkout from './pages/LogWorkout'
@@ -19,6 +20,7 @@ export default function App() {
   const token = useAuth((s) => s.token)
   const setUser = useAuth((s) => s.setUser)
   const signedIn = DEMO || !!token
+  useApplyTheme()
 
   // Keeps the stored profile fresh (and loads the demo profile).
   const me = useQuery({ queryKey: ['me'], queryFn: api.me, enabled: signedIn })

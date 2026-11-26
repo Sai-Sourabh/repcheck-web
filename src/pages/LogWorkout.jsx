@@ -6,7 +6,7 @@ import { delta, effectiveReps, estimateOneRm, today } from '../api/math'
 import { ago, clock, kg, plural, setText, titleCase } from '../format'
 import { useDraft, usePrefs } from '../store'
 import ExercisePicker, { useExercises } from '../components/ExercisePicker'
-import { Async, Button, Delta, Empty, Icon, Input, Notice, Panel, PanelHead } from '../components/ui'
+import { Async, Button, Delta, Empty, Icon, Input, Notice, PageTitle, Panel, PanelHead, PrBadge } from '../components/ui'
 
 const REST_CHOICES = [60, 90, 120, 180, 240]
 const filled = (set) => Number(set.reps) > 0 && set.weightKg !== '' && Number(set.weightKg) >= 0
@@ -56,7 +56,7 @@ function StartScreen() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-4xl leading-none font-bold md:text-5xl">Log a workout</h1>
+        <PageTitle>Log a workout</PageTitle>
         <p className="mt-2 text-mute">Pick a day from one of your plans, or build the session as you go.</p>
       </div>
       <Panel>
@@ -141,7 +141,7 @@ function ExerciseBlock({ entry, exercise, previous }) {
                 onChange={(e) => updateSet(entry.exerciseId, index, { cleanReps: e.target.value })} />
               <button type="button" onClick={() => toggle(index, set)} aria-pressed={set.done}
                 aria-label={`Mark set ${index + 1} ${set.done ? 'not done' : 'done'}`}
-                className={`press grid h-10 w-11 place-items-center rounded-md border ${set.done ? 'border-up bg-up text-white' : 'border-line text-mute'} ${!set.done && !filled(set) ? 'opacity-40' : ''}`}>
+                className={`press grid h-10 w-11 place-items-center rounded-md border ${set.done ? 'border-up bg-up text-on-up' : 'border-line text-mute'} ${!set.done && !filled(set) ? 'opacity-40' : ''}`}>
                 <Icon name="check" />
               </button>
               <button type="button" onClick={() => removeSet(entry.exerciseId, index)} aria-label={`Remove set ${index + 1}`}
@@ -182,19 +182,19 @@ function RestBar() {
 
   if (!restEndsAt || left <= 0) return null
   return (
-    <div className="rest-bar fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 bg-ink text-white md:bottom-0 md:left-56" role="timer" aria-label="Rest timer">
+    <div className="rest-bar fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 bg-solid text-on-solid md:bottom-0 md:left-56" role="timer" aria-label="Rest timer">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2.5 md:px-8">
         <span className="flex items-baseline gap-2">
-          <span className="text-sm text-white/70">Rest</span>
+          <span className="text-sm text-on-solid/75">Rest</span>
           <span className="num text-3xl leading-none font-bold">{clock(Math.ceil(left))}</span>
         </span>
         <span className="flex items-center gap-2">
           <select aria-label="Default rest length" value={restSeconds} onChange={(e) => { setRestSeconds(Number(e.target.value)); startRest(Number(e.target.value)) }}
-            className="h-9 rounded-md border border-white/30 bg-transparent px-2 text-sm font-semibold text-white">
-            {REST_CHOICES.map((s) => <option key={s} value={s} className="text-ink">{clock(s)}</option>)}
+            className="h-9 rounded-md border border-on-solid/30 bg-transparent px-2 text-sm font-semibold text-on-solid">
+            {REST_CHOICES.map((s) => <option key={s} value={s} className="bg-panel text-ink">{clock(s)}</option>)}
           </select>
-          <button type="button" className="press h-9 rounded-md border border-white/30 px-3 text-sm font-semibold" onClick={() => useDraft.setState({ restEndsAt: restEndsAt + 30000 })}>+30s</button>
-          <button type="button" className="press h-9 rounded-md bg-white px-3 text-sm font-semibold text-ink" onClick={stopRest}>Skip rest</button>
+          <button type="button" className="press h-9 rounded-md border border-on-solid/30 px-3 text-sm font-semibold" onClick={() => useDraft.setState({ restEndsAt: restEndsAt + 30000 })}>+30s</button>
+          <button type="button" className="press h-9 rounded-md bg-on-solid px-3 text-sm font-semibold text-solid" onClick={stopRest}>Skip rest</button>
         </span>
       </div>
     </div>
@@ -255,7 +255,7 @@ function ActiveWorkout({ onFinished }) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0 flex-1">
           <Input value={draft.name} onChange={(e) => draft.setName(e.target.value)} placeholder="Name this workout" aria-label="Workout name"
-            className="num !h-12 !border-transparent !bg-transparent !px-0 !text-3xl font-bold hover:!border-line focus:!border-plate focus:!bg-white focus:!px-3" />
+            className="num !h-12 !border-transparent !bg-transparent !px-0 !text-3xl font-bold hover:!border-line focus:!border-plate focus:!bg-field focus:!px-3" />
           <p className="mt-1 text-mute">
             <span className="num text-lg font-bold text-ink">{clock((now - draft.startedAt) / 1000)}</span> elapsed,{' '}
             <span className="font-semibold text-ink">{plural(doneSets.length, 'set')}</span>, <span className="font-semibold text-ink">{kg(volume)}</span> lifted
@@ -296,6 +296,23 @@ function ActiveWorkout({ onFinished }) {
 
 // ----------------------------------------------------------------- summary
 
+/** Round sticker for a workout with PRs, turning slowly like the badge on a record sleeve. */
+function RecordSticker({ count }) {
+  const text = `${count === 1 ? 'NEW PERSONAL RECORD' : `${count} NEW RECORDS`} · ${count === 1 ? 'NEW PERSONAL RECORD' : `${count} NEW RECORDS`} · `
+  return (
+    <div className="stamp relative grid h-24 w-24 shrink-0 place-items-center rounded-full bg-plate text-on-plate md:h-28 md:w-28" aria-hidden="true">
+      <svg viewBox="0 0 100 100" className="spin-slow absolute inset-0 h-full w-full">
+        <defs><path id="sticker-ring" d="M50 50 m-36 0 a36 36 0 1 1 72 0 a36 36 0 1 1 -72 0" /></defs>
+        <text fontSize="10" fontWeight="700" fill="currentColor" fontFamily="var(--font-display)">
+          {/* Stretched to exactly one lap (2 x pi x 36) so the ends meet without overlapping. */}
+          <textPath href="#sticker-ring" textLength="224" lengthAdjust="spacing">{text}</textPath>
+        </text>
+      </svg>
+      <span className="num text-3xl font-extrabold">PR</span>
+    </div>
+  )
+}
+
 /** Rows land 70ms apart at first, then closer, so a long list doesn't drag. */
 const revealDelay = (i) => Math.round(70 * i - 3 * i * i > 0 ? Math.min(70 * i - 3 * i * i, 420) : 0)
 
@@ -303,12 +320,15 @@ function Summary({ workout, onDone }) {
   const prs = workout.exercises.filter((e) => e.pr).length
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-4xl leading-none font-bold md:text-5xl">Workout saved</h1>
-        <p className="mt-2 text-mute">
-          {kg(workout.totalVolumeKg)} lifted across {plural(workout.exercises.length, 'exercise')}
-          {prs > 0 ? `, with ${plural(prs, 'personal record')}.` : '.'}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <PageTitle>Workout saved</PageTitle>
+          <p className="mt-2 text-mute">
+            {kg(workout.totalVolumeKg)} lifted across {plural(workout.exercises.length, 'exercise')}
+            {prs > 0 ? `, with ${plural(prs, 'personal record')}.` : '.'}
+          </p>
+        </div>
+        {prs > 0 && <RecordSticker count={prs} />}
       </div>
       <Panel>
         <ul>
@@ -316,7 +336,7 @@ function Summary({ workout, onDone }) {
             <li key={e.exerciseId} className="reveal-row flex items-center justify-between gap-3 border-b border-line px-4 py-3 last:border-0"
               style={{ animationDelay: `${revealDelay(i)}ms` }}>
               <span className="min-w-0">
-                <span className="block truncate font-semibold">{e.exerciseName}{e.pr && <span className="ml-2 rounded bg-plate px-1.5 py-0.5 text-[11px] font-bold text-white">PR</span>}</span>
+                <span className="block truncate font-semibold">{e.exerciseName}{e.pr && <PrBadge stamp />}</span>
                 <span className="block text-sm text-mute">{e.sets.map(setText).join(', ')}</span>
                 {e.formPct != null && e.formPct < 100 && (
                   <span className="block text-sm font-medium text-same">Form held for {Math.round(e.formPct)}% of reps. Arrow counts clean reps only.</span>

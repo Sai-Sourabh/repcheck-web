@@ -8,7 +8,7 @@ import {
 import { api } from '../api'
 import { addDays, estimateOneRm, today, weekStartOf } from '../api/math'
 import { dayMonth, kg, num, sets as fmtSets, shortDate, titleCase } from '../format'
-import { Async, Button, Delta, Empty, Field, Input, Notice, Panel, PanelHead, Segmented, Select } from '../components/ui'
+import { Async, Button, Delta, Empty, Field, Input, Notice, PageTitle, Panel, PanelHead, Segmented, Select } from '../components/ui'
 
 const TABS = [
   { value: 'volume', label: 'Weekly volume' },
@@ -17,7 +17,7 @@ const TABS = [
   { value: 'balance', label: 'Balance' },
 ]
 const axis = { fontSize: 12, fill: 'var(--color-mute)' }
-const tooltipStyle = { borderRadius: 6, border: '1px solid var(--color-line)', fontSize: 13, boxShadow: 'none' }
+const tooltipStyle = { borderRadius: 6, border: '1px solid var(--color-line)', fontSize: 13, boxShadow: 'none', background: 'var(--color-panel)', color: 'var(--color-ink)' }
 
 // ------------------------------------------------------------------ volume
 
@@ -45,7 +45,7 @@ function VolumeBar({ muscle }) {
       <span className="absolute inset-y-0 bg-up-soft" style={{ left: pct(muscle.mev), width: `calc(${pct(muscle.mav)} - ${pct(muscle.mev)})` }} />
       <span className="absolute inset-y-0 bg-same-soft" style={{ left: pct(muscle.mav), width: `calc(${pct(muscle.mrv)} - ${pct(muscle.mav)})` }} />
       <span className="absolute inset-y-0 right-0 bg-down-soft" style={{ left: pct(muscle.mrv) }} />
-      <span className="absolute inset-y-[3px] left-0 rounded-full bg-ink" style={{ width: pct(muscle.totalSets) }} />
+      <span className="grow-x absolute inset-y-[3px] left-0 rounded-full bg-ink" style={{ width: pct(muscle.totalSets) }} />
     </div>
   )
 }
@@ -112,7 +112,7 @@ function OneRmCalculator() {
         <Field label="Weight (kg)"><Input type="number" inputMode="decimal" min="0" step="0.5" value={weight} onChange={(e) => setWeight(e.target.value)} /></Field>
         <Field label="Reps"><Input type="number" inputMode="numeric" min="1" value={reps} onChange={(e) => setReps(e.target.value)} /></Field>
       </div>
-      <p className="px-4 pt-3 text-mute">Estimated max <span className="num ml-1 text-4xl font-bold text-ink">{oneRm ? num(oneRm) : '-'}</span> kg</p>
+      <p className="px-4 pt-3 text-mute">Estimated max <span className="num ml-1 text-4xl font-extrabold text-ink">{oneRm ? num(oneRm) : '-'}</span> kg</p>
       {oneRm > 0 && (
         <div className="overflow-x-auto px-4 pt-2 pb-4">
           <table className="w-full min-w-[20rem] text-sm">
@@ -339,7 +339,7 @@ export default function Progress() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-4xl leading-none font-bold md:text-5xl">Progress</h1>
+        <PageTitle>Progress</PageTitle>
         <p className="mt-2 text-mute">What to do next week, and whether it is working.</p>
       </div>
       <Segmented label="Progress views" value={tab} options={TABS} onChange={(value) => setParams({ tab: value }, { replace: true })} />

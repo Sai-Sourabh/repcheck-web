@@ -62,7 +62,7 @@ export default function ExercisePicker({ onPick, onClose, exclude = [] }) {
             <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4">
               {['', ...MUSCLES].map((m) => (
                 <button key={m || 'all'} type="button" onClick={() => setMuscle(m)} aria-pressed={muscle === m}
-                  className={`press h-9 shrink-0 rounded-full border px-3 text-sm font-semibold ${muscle === m ? 'border-ink bg-ink text-white' : 'border-line text-mute'}`}>
+                  className={`press h-9 shrink-0 rounded-full border px-3 text-sm font-semibold ${muscle === m ? 'border-solid bg-solid text-on-solid' : 'border-line text-mute'}`}>
                   {m ? titleCase(m) : 'All'}
                 </button>
               ))}

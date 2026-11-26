@@ -5,7 +5,7 @@ import { api } from '../api'
 import { ago, num } from '../format'
 import { useAuth, useDraft } from '../store'
 import Heatmap from '../components/Heatmap'
-import { Async, Button, Delta, Empty, Panel, PanelHead, Spark } from '../components/ui'
+import { Async, Button, CountUp, Delta, Empty, PageTitle, Panel, PanelHead, PrBadge, Spark } from '../components/ui'
 
 const STATUS_TONE = {
   FRESH: 'text-up', BALANCED: 'text-ink', FATIGUED: 'text-same', OVERREACHING: 'text-down', BUILDING_BASELINE: 'text-mute',
@@ -20,12 +20,12 @@ function StreakBlock({ title, streak, unit }) {
     <div className="p-4">
       <p className="text-sm font-medium text-mute">{title}</p>
       <p className="mt-1 flex items-baseline gap-2">
-        <span className="num text-5xl leading-none font-bold">{streak.currentStreak}</span>
+        <span className="num text-6xl leading-none font-extrabold text-display"><CountUp value={streak.currentStreak} digits={0} duration={700} /></span>
         <span className="text-mute">{streak.currentStreak === 1 ? 'week' : 'weeks'} in a row</span>
       </p>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-chalk" role="progressbar" aria-valuemin={0}
         aria-valuemax={streak.weekGoal} aria-valuenow={Math.min(streak.weekProgress, streak.weekGoal)} aria-label={`${title} this week`}>
-        <div className={`h-full rounded-full ${streak.goalMetThisWeek ? 'bg-up' : 'bg-plate'}`} style={{ width: `${pct}%` }} />
+        <div className={`grow-x h-full rounded-full ${streak.goalMetThisWeek ? 'bg-up' : 'bg-plate'}`} style={{ width: `${pct}%` }} />
       </div>
       <p className="mt-2 text-sm text-mute">
         <span className="font-semibold text-ink">{num(streak.weekProgress, 0)}</span> of {num(streak.weekGoal, 0)} {unit} this week.
@@ -49,7 +49,7 @@ function LiftBoard({ lifts }) {
   return (
     <>
       <div className="px-4 pb-3">
-        <div className="flex h-2 overflow-hidden rounded-full bg-chalk" aria-hidden="true">
+        <div className="grow-x flex h-2 overflow-hidden rounded-full bg-chalk" aria-hidden="true">
           <span className="bg-up" style={{ width: `${(up / moved) * 100}%` }} />
           <span className="bg-same" style={{ width: `${(same / moved) * 100}%` }} />
           <span className="bg-down" style={{ width: `${(down / moved) * 100}%` }} />
@@ -65,7 +65,7 @@ function LiftBoard({ lifts }) {
             <button type="button" onClick={() => navigate(`/progress?tab=lifts&exercise=${lift.exerciseId}`)}
               className="grid w-full grid-cols-[1fr_auto_auto] items-center gap-x-3 px-4 py-2.5 text-left transition-colors hover:bg-chalk/60 sm:grid-cols-[1fr_auto_7rem_5.5rem]">
               <span className="min-w-0">
-                <span className="block truncate font-semibold">{lift.exerciseName}{lift.pr && <span className="ml-2 rounded bg-plate px-1.5 py-0.5 text-[11px] font-bold text-white">PR</span>}
+                <span className="block truncate font-semibold">{lift.exerciseName}{lift.pr && <PrBadge />}
                   {lift.formWarning && <span className="ml-2 rounded bg-same-soft px-1.5 py-0.5 text-[11px] font-bold text-same">Form slipping</span>}</span>
                 <span className="block truncate text-sm text-mute">
                   {lift.bestWeightKg > 0 ? `${num(lift.bestWeightKg)} kg × ${lift.bestReps}` : `${lift.bestReps} reps`}
@@ -74,7 +74,7 @@ function LiftBoard({ lifts }) {
               </span>
               <span className="hidden sm:block"><Spark values={lift.trend} direction={lift.deltaDirection} /></span>
               <span className="text-right">
-                <span className="num block text-2xl leading-6 font-bold">{lift.bestOneRm > 0 ? num(lift.bestOneRm) : '-'}</span>
+                <span className="num block text-2xl leading-6 font-extrabold">{lift.bestOneRm > 0 ? <CountUp value={lift.bestOneRm} /> : '-'}</span>
                 <span className="block text-[11px] text-mute">est. 1RM kg</span>
               </span>
               <span className="flex justify-end"><Delta direction={lift.deltaDirection} pct={lift.deltaPct} /></span>
@@ -105,7 +105,7 @@ export default function Today() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-4xl leading-none font-bold md:text-5xl">{user?.displayName ? `Hey ${user.displayName.split(' ')[0]}` : 'Today'}</h1>
+          <PageTitle>{user?.displayName ? `Hey ${user.displayName.split(' ')[0]}` : 'Today'}</PageTitle>
           <p className="mt-2 text-mute">Are your lifts going up? Here is the tape.</p>
         </div>
         <Link to="/log"><Button size="lg">{draftActive ? 'Resume workout' : 'Start workout'}</Button></Link>

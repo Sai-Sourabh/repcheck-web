@@ -4,29 +4,124 @@
 @import "@fontsource/barlow/600.css";
 @import "@fontsource/barlow-condensed/600.css";
 @import "@fontsource/barlow-condensed/700.css";
+@import "@fontsource/barlow-condensed/800.css";
 
-/* Palette comes from the gym floor: chalk, iron, and the cobalt of a 20 kg plate.
-   Green / red / amber are reserved for the up / down / same arrows. */
+/* Colour tokens. Three themes override them below: Nocturne (charcoal, dusty purple,
+   gold), Swell (sand, navy, tangerine) and Chalk (the original cobalt look).
+   Each pairs a base with its opposite on the colour wheel. Green / red / yellow stay
+   reserved for the up / down / same arrows in every theme. */
 @theme {
+  --color-chalk: #2b2b2e;
+  --color-panel: #343438;
+  --color-field: #29292c;
+  --color-ink: #f4efe6;
+  --color-mute: #bdb5c6;
+  --color-hint: #9f98a8;
+  --color-line: #4a4950;
+  --color-plate: #f2c14e;
+  --color-plate-dark: #ffd36e;
+  --color-plate-soft: #46402f;
+  --color-accent: #f2c14e;
+  --color-on-plate: #2b2b2e;
+  --color-solid: #6b5b7b;
+  --color-on-solid: #ffffff;
+  --color-rail: #6b5b7b;
+  --color-rail-text: #ede6f5;
+  --color-rail-active: #f2c14e;
+  --color-on-rail-active: #2b2b2e;
+  --color-display: #a998be;
+  --color-up: #63d48f;
+  --color-up-soft: #20392b;
+  --color-on-up: #14261a;
+  --color-down: #ff8a7a;
+  --color-down-soft: #47282a;
+  --color-same: #f2c14e;
+  --color-same-soft: #47402b;
+  --color-backdrop: rgb(0 0 0 / 0.6);
+  --color-heat-0: #3b3b40;
+  --color-heat-1: #54496a;
+  --color-heat-2: #7d6c97;
+  --color-heat-3: #c9a24d;
+  --color-heat-4: #f2c14e;
+  --font-sans: "Barlow", system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Barlow", system-ui, sans-serif;
+}
+
+/* Nocturne is the default (values above). */
+:root[data-theme="swell"] {
+  --color-chalk: #eee3c6;
+  --color-panel: #fbf6e9;
+  --color-field: #ffffff;
+  --color-ink: #1b2a4a;
+  --color-mute: #545f77;
+  --color-hint: #6b7487;
+  --color-line: #e0d3b0;
+  --color-plate: #ff8c28;
+  --color-plate-dark: #f07a12;
+  --color-plate-soft: #ffe3c7;
+  --color-accent: #a84a06;
+  --color-on-plate: #1b2a4a;
+  --color-solid: #1b2a4a;
+  --color-on-solid: #fbf6e9;
+  --color-rail: #1b2a4a;
+  --color-rail-text: #c9d1e2;
+  --color-rail-active: #ff8c28;
+  --color-on-rail-active: #1b2a4a;
+  --color-display: #1b2a4a;
+  --color-up: #087a43;
+  --color-up-soft: #ddf0df;
+  --color-on-up: #ffffff;
+  --color-down: #b8261c;
+  --color-down-soft: #fbe0da;
+  --color-same: #7f5205;
+  --color-same-soft: #f8e8c4;
+  --color-backdrop: rgb(27 42 74 / 0.55);
+  --color-heat-0: #e6dab9;
+  --color-heat-1: #f9c48f;
+  --color-heat-2: #ff8c28;
+  --color-heat-3: #3e5487;
+  --color-heat-4: #1b2a4a;
+}
+:root[data-theme="chalk"] {
   --color-chalk: #e9ecef;
   --color-panel: #ffffff;
+  --color-field: #ffffff;
   --color-ink: #12161c;
   --color-mute: #5b6470;
+  --color-hint: #6c7480;
   --color-line: #d5dae0;
   --color-plate: #2447e6;
   --color-plate-dark: #1a36b8;
   --color-plate-soft: #e3e8fd;
-  /* Arrow colours are dark enough for 4.5:1 on their own tints. */
+  --color-accent: #2447e6;
+  --color-on-plate: #ffffff;
+  --color-solid: #12161c;
+  --color-on-solid: #ffffff;
+  --color-rail: #12161c;
+  --color-rail-text: #aeb6c0;
+  --color-rail-active: #2447e6;
+  --color-on-rail-active: #ffffff;
+  --color-display: #12161c;
   --color-up: #087a43;
   --color-up-soft: #ddf3e7;
+  --color-on-up: #ffffff;
   --color-down: #b8261c;
   --color-down-soft: #fbe3e0;
   --color-same: #8a5a06;
   --color-same-soft: #fbefd2;
-  --color-hint: #6c7480;
-  --color-rail-text: #aeb6c0;
-  --font-sans: "Barlow", system-ui, sans-serif;
-  --font-display: "Barlow Condensed", "Barlow", system-ui, sans-serif;
+  --color-backdrop: rgb(18 22 28 / 0.5);
+  --color-heat-0: #dfe3e8;
+  --color-heat-1: #b9c5f8;
+  --color-heat-2: #7f95f1;
+  --color-heat-3: #2447e6;
+  --color-heat-4: #14277f;
+}
+:root {
+  color-scheme: dark;
+}
+:root[data-theme="swell"],
+:root[data-theme="chalk"] {
+  color-scheme: light;
 }
 
 :root {
@@ -43,12 +138,13 @@ html {
   /* Browser-drawn surfaces carry the palette too. */
   accent-color: var(--color-plate);
   caret-color: var(--color-plate);
-  scrollbar-color: #b9c0c8 transparent;
+  scrollbar-color: var(--color-line) transparent;
+  transition: background-color 300ms ease;
   -webkit-tap-highlight-color: transparent;
 }
 ::selection {
   background: var(--color-plate);
-  color: #fff;
+  color: var(--color-on-plate);
 }
 body {
   margin: 0;
@@ -58,8 +154,11 @@ h1, h2, h3, .num {
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
 }
+/* Poster-scale headings, as in the references: heavy condensed type in the display colour. */
 h1 {
-  letter-spacing: -0.015em;
+  color: var(--color-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
 input[type="number"], td, .tabular {
@@ -123,6 +222,50 @@ input[type="number"]::-webkit-inner-spin-button {
   animation: chip-in 320ms var(--ease-out) both;
 }
 
+/* Page titles rise out of a mask on arrival. */
+.title-in {
+  animation: title-in 520ms var(--ease-out) both;
+}
+/* Bars and rings fill from empty the first time they appear. */
+.grow-x {
+  transform-origin: left center;
+  animation: grow-x 700ms var(--ease-out) both;
+}
+.grow-y {
+  transform-origin: bottom center;
+  animation: grow-y 600ms var(--ease-out) both;
+}
+/* Heatmap bricks fade in one week-column at a time. */
+.brick-in {
+  animation: fade-in 420ms ease-out both;
+}
+/* A personal record lands like a stamp. */
+.stamp {
+  animation: stamp 520ms var(--ease-out) both;
+}
+/* The badge on a PR summary turns slowly, like the sticker on a record sleeve. */
+.spin-slow {
+  animation: spin 14s linear infinite;
+}
+
+@keyframes title-in {
+  from { opacity: 0; transform: translateY(0.45em); clip-path: inset(0 0 100% 0); }
+  to { opacity: 1; transform: none; clip-path: inset(0 0 -20% 0); }
+}
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+}
+@keyframes grow-y {
+  from { transform: scaleY(0); }
+}
+@keyframes stamp {
+  0% { opacity: 0; transform: scale(1.8) rotate(-14deg); }
+  60% { opacity: 1; transform: scale(0.94) rotate(-6deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-8deg); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 @keyframes fade-in {
   from { opacity: 0; }
 }
@@ -145,8 +288,11 @@ input[type="number"]::-webkit-inner-spin-button {
 /* Reduced motion keeps the fades that explain what changed and drops the movement. */
 @media (prefers-reduced-motion: reduce) {
   .press:active:not(:disabled) { transform: none; }
-  .sheet-panel, .rest-bar, .reveal-row, .reveal-chip {
+  .sheet-panel, .rest-bar, .reveal-row, .reveal-chip, .title-in, .stamp {
     animation-name: fade-in;
     animation-duration: 160ms;
+  }
+  .grow-x, .grow-y, .brick-in, .spin-slow {
+    animation: none;
   }
 }

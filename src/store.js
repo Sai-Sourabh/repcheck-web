@@ -60,5 +60,13 @@ export const useDraft = create(
 )
 
 export const usePrefs = create(
-  persist((set) => ({ restSeconds: 120, setRestSeconds: (restSeconds) => set({ restSeconds }) }), { name: 'repcheck-prefs' }),
+  persist(
+    (set) => ({
+      restSeconds: 120,
+      theme: 'nocturne',
+      setRestSeconds: (restSeconds) => set({ restSeconds }),
+      setTheme: (theme) => set({ theme }),
+    }),
+    { name: 'repcheck-prefs' },
+  ),
 )
